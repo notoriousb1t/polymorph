@@ -15,8 +15,7 @@
         "noUnusedLocals": true,        
         "preserveConstEnums": false,
         "removeComments": false,
-        "sourceMap": false,
-        "strictNullChecks": true,
+        "sourceMap": false, 
         "suppressImplicitAnyIndexErrors": true,
         "target": "es5"
     },

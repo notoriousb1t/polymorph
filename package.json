@@ -35,6 +35,7 @@
   "scripts": {
     "build": "npm run build:cdn",
     "build:cdn": "rollup -c ./config/rollup.cdn.js",
+    "compress": "npm run compress:cdn",
     "compress:cdn": "uglifyjs --config-file ./config/compress.json -o dist/shapely.min.js dist/shapely.js",
     "clean": "node_modules/.bin/del-cli -f dist lib lib.es2015",
     "postversion": "git push --follow-tags && npm publish",

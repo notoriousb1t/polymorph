@@ -7,7 +7,7 @@
             "statements"
         ],
         "ban": false,
-        "class-name": true,
+        "class-name": false,
         "comment-format": [
             true,
             "check-space",
@@ -88,7 +88,7 @@
         ],
         "radix": true,
         "semicolon": [
-            true,
+            false,
             "always"
         ],
         "switch-default": true,
