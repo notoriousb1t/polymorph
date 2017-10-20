@@ -24,7 +24,7 @@
   "license": "MIT",
   "main": "./lib/main.js",
   "module": "./lib.es2015/main.js",
-  "name": "polymorph",
+  "name": "polymorph-js",
   "repository": {
     "type": "git",
     "url": "https://github.com/notoriousb1t/polymorph"
