@@ -1,0 +1,27 @@
+{
+    "compilerOptions": {
+        "allowUnreachableCode": false,
+        "allowUnusedLabels": false,
+        "declaration": true,
+        "declarationDir": "types",
+        "forceConsistentCasingInFileNames": true,
+        "inlineSourceMap": false,
+        "newLine": "LF",
+        "module": "commonjs",
+        "moduleResolution": "node",
+        "noFallthroughCasesInSwitch": true,
+        "noImplicitAny": false,
+        "noImplicitReturns": true,
+        "noImplicitUseStrict": true,
+        "noUnusedLocals": true,
+        "preserveConstEnums": false,
+        "removeComments": true,
+        "rootDir": "src",
+        "sourceMap": false,
+        "strictNullChecks": false,
+        "suppressImplicitAnyIndexErrors": true,
+        "target": "es5",
+        "outDir": "lib"
+    },
+    "exclude": ["dist", "lib", "lib.es2015", "tests", "node_modules", "types"]
+}

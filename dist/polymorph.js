@@ -10,9 +10,7 @@ function coalesce(current, fallback) {
 var parsers = {
     M: function (ctx) {
         var n = ctx.t;
-        ctx.x = n[1];
-        ctx.y = n[2];
-        ctx.p.push(n[1], n[2]);
+        addSegment(ctx, n[1], n[2]);
     },
     H: function (ctx) {
         addCurve(ctx, _, _, _, _, ctx.t[1], _);
@@ -41,6 +39,13 @@ var parsers = {
         addCurve(ctx, n[1], n[2], n[1], n[2], n[3], n[4]);
     }
 };
+function addSegment(ctx, x, y) {
+    ctx.x = x;
+    ctx.y = y;
+    var p = [x, y];
+    ctx.s.push(p);
+    ctx.p = p;
+}
 function addCurve(ctx, x1, y1, x2, y2, dx, dy) {
     var defaultX = ctx.r ? 0 : ctx.x;
     var defaultY = ctx.r ? 0 : ctx.y;
@@ -71,7 +76,8 @@ function parsePath(d) {
         c: _,
         r: _,
         t: _,
-        p: []
+        s: [],
+        p: _
     };
     var segments = parseSegments(d);
     for (var i = 0; i < segments.length; i++) {
@@ -86,7 +92,7 @@ function parsePath(d) {
         }
         parser(ctx);
     }
-    return ctx.p;
+    return ctx.s;
 }
 function parseSegments(d) {
     return d
@@ -103,10 +109,14 @@ function parseCommand(s, i) {
     return i === 0 ? s : +s;
 }
 
-function renderPath(n) {
-    var parts = ['M', formatNumber(n[0]), formatNumber(n[1]), 'C'];
-    for (var f = 2; f < n.length; f++) {
-        parts.push(formatNumber(n[f]));
+function renderPath(ns) {
+    var parts = [];
+    for (var i = 0; i < ns.length; i++) {
+        var n = ns[i];
+        parts.push('M', formatNumber(n[0]), formatNumber(n[1]), 'C');
+        for (var f = 2; f < n.length; f++) {
+            parts.push(formatNumber(n[f]));
+        }
     }
     return parts.join(' ');
 }
