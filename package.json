@@ -5,8 +5,10 @@
   },
   "description": "Morph SVG shapes",
   "devDependencies": {
+    "@types/chai": "^4.0.4",
     "@types/mocha": "^2.2.43",
     "@types/node": "^8.0.45",
+    "chai": "^4.1.2",
     "del-cli": "^1.1.0",
     "mocha": "^3.5.3",
     "rollup": "^0.50.0",
@@ -33,10 +35,9 @@
     "node_modules/@types"
   ],
   "scripts": {
-    "build": "npm run build:cdn",
+    "build": "npm run build:cdn && npm run compress:cdn",
     "build:cdn": "rollup -c ./config/rollup.cdn.js",
-    "compress": "npm run compress:cdn",
-    "compress:cdn": "uglifyjs --config-file ./config/compress.json -o dist/shapely.min.js dist/shapely.js",
+    "compress:cdn": "uglifyjs --config-file ./config/compress.json -o dist/polymorph.min.js dist/polymorph.js",
     "clean": "node_modules/.bin/del-cli -f dist lib lib.es2015",
     "postversion": "git push --follow-tags && npm publish",
     "preversion": "npm run rebuild",

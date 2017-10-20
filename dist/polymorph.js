@@ -1,4 +1,4 @@
-var shapely = (function (exports) {
+var polymorph = (function (exports) {
 'use strict';
 
 var _ = undefined;
@@ -73,12 +73,7 @@ function parsePath(d) {
         t: _,
         p: []
     };
-    var segments = d
-        .replace(/[\^\s]*([mhvlzcsqta]|[-]?[\d]*[.]?[\d]+)[\$\s]*/gi, ' $1')
-        .replace(/([mhvlzcsqta])/gi, ' $1')
-        .trim()
-        .split('  ')
-        .map(function (s2) { return s2.split(' ').map(parseSegment); });
+    var segments = parseSegments(d);
     for (var i = 0; i < segments.length; i++) {
         var terms = segments[i];
         var commandLetter = terms[0];
@@ -93,7 +88,18 @@ function parsePath(d) {
     }
     return ctx.p;
 }
-function parseSegment(s, i) {
+function parseSegments(d) {
+    return d
+        .replace(/[\^\s]*([mhvlzcsqta]|[-]?[\d]*[.]?[\d]+)[\$\s]*/gi, ' $1')
+        .replace(/([mhvlzcsqta])/gi, ' $1')
+        .trim()
+        .split('  ')
+        .map(parseSegment);
+}
+function parseSegment(s2) {
+    return s2.split(' ').map(parseCommand);
+}
+function parseCommand(s, i) {
     return i === 0 ? s : +s;
 }
 

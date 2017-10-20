@@ -30,7 +30,11 @@ interface IParseContext {
      */
     t: number[]
     /**
-     * Numbers output
+     * All segments
+     */
+    s: number[][]
+    /**
+     * Current poly-bezier. (The one being bult)
      */
     p: number[]
 }
@@ -38,9 +42,7 @@ interface IParseContext {
 const parsers = {
     M(ctx: IParseContext): void {
         const n = ctx.t
-        ctx.x = n[1]
-        ctx.y = n[2]
-        ctx.p.push(n[1], n[2])
+        addSegment(ctx, n[1], n[2])
     },
     H(ctx: IParseContext): void {
         addCurve(ctx, _, _, _, _, ctx.t[1], _)
@@ -68,6 +70,15 @@ const parsers = {
         const n = ctx.t
         addCurve(ctx, n[1], n[2], n[1], n[2], n[3], n[4])
     }
+}
+
+function addSegment(ctx: IParseContext, x: number, y: number): void {
+    ctx.x = x
+    ctx.y = y
+
+    const p: number[] = [x, y]
+    ctx.s.push(p)
+    ctx.p = p
 }
 
 function addCurve(
@@ -115,7 +126,7 @@ function addCurve(
  * Returns an [] with cursor position + polybezier [mx, my, ...[x1, y1, x2, y2, dx, dy] ]
  * @param d string to parse
  */
-export function parsePath(d: string): number[] {
+export function parsePath(d: string): number[][] {
     // create parser context
     const ctx: IParseContext = {
         x: 0,
@@ -124,7 +135,8 @@ export function parsePath(d: string): number[] {
         c: _,
         r: _,
         t: _,
-        p: []
+        s: [],
+        p: _
     }
 
     // split into segments
@@ -151,7 +163,7 @@ export function parsePath(d: string): number[] {
     }
 
     // return points
-    return ctx.p
+    return ctx.s
 }
 
 function parseSegments(d: string): (string | number)[][] {

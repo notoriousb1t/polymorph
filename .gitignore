@@ -7,7 +7,6 @@ npm-debug.log*
 /lib
 /lib.es2015
 /types
-/config
 /src/**/*.js
 /src/**/*.map
 /test/**/*.js
