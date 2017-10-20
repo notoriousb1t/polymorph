@@ -1,4 +1,4 @@
-import { _ } from '../constants'
+import { _, S, C, Z } from '../constants'
 import { coalesce } from '../utilities/coalesce'
 
 // for parsing poly-commands
@@ -21,10 +21,6 @@ interface IParseContext {
      * Current command being parsed
      */
     c: string
-    /**
-     * True if command is relative (not absolute)
-     */
-    r: boolean
     /**
      * Terms being parsed
      */
@@ -62,9 +58,19 @@ const parsers = {
         addCurve(ctx, n[1], n[2], n[3], n[4], n[5], n[6])
     },
     S(ctx: IParseContext): void {
-        const n = ctx.t
-        const isLastCurve = ctx.lc === 'S' || ctx.lc === 'C'
-        addCurve(ctx, isLastCurve ? 0 : n[1], isLastCurve ? 0 : n[2], n[1], n[2], n[3], n[4])
+        const t = ctx.t
+        const p = ctx.p
+        const isLastCurve = ctx.lc === S || ctx.lc === C
+
+        let x1: number = _
+        let y1: number = _
+        if (isLastCurve) {
+            const len = p.length
+            x1 = p[len - 2] * 2 - p[len - 4]
+            y1 = p[len - 1] * 2 - p[len - 3]
+        }
+
+        addCurve(ctx, x1, y1, t[1], t[2], t[3], t[4])
     },
     Q(ctx: IParseContext): void {
         const n = ctx.t
@@ -90,26 +96,16 @@ function addCurve(
     dx: number | undefined,
     dy: number | undefined
 ): void {
-    const defaultX = ctx.r ? 0 : ctx.x
-    const defaultY = ctx.r ? 0 : ctx.y
+    const x = ctx.x
+    const y = ctx.y
 
     // ensure values
-    x1 = coalesce(x1, defaultX)
-    y1 = coalesce(y1, defaultY)
-    x2 = coalesce(x2, defaultX)
-    y2 = coalesce(y2, defaultY)
-    dx = coalesce(dx, defaultX)
-    dy = coalesce(dy, defaultY)
-
-    // adjust values if command is relative
-    if (ctx.r) {
-        x1 += ctx.x
-        y1 += ctx.y
-        x2 += ctx.x
-        y2 += ctx.y
-        dx += ctx.x
-        dy += ctx.y
-    }
+    x1 = coalesce(x1, x)
+    y1 = coalesce(y1, y)
+    x2 = coalesce(x2, x)
+    y2 = coalesce(y2, y)
+    dx = coalesce(dx, x)
+    dy = coalesce(dy, y)
 
     // add numbers to points
     ctx.p.push(x1, y1, x2, y2, dx, dy)
@@ -133,7 +129,6 @@ export function parsePath(d: string): number[][] {
         y: 0,
         lc: _,
         c: _,
-        r: _,
         t: _,
         s: [],
         p: _
@@ -148,8 +143,8 @@ export function parsePath(d: string): number[][] {
         const commandLetter = terms[0] as string
 
         // setup context
-        ctx.c = commandLetter.toUpperCase()
-        ctx.r = ctx.c !== 'Z' && commandLetter !== ctx.c
+        const command = commandLetter.toUpperCase()
+        ctx.c = command
         ctx.t = terms as number[]
 
         // find command parser
@@ -158,12 +153,31 @@ export function parsePath(d: string): number[][] {
             throw new Error(ctx.c + ' is not supported')
         }
 
+        if (command !== Z && command !== commandLetter) {
+            ensureAbsolute(ctx)
+        }
+
         // parse
         parser(ctx)
     }
 
     // return points
     return ctx.s
+}
+
+function ensureAbsolute(ctx: IParseContext): void {
+    if (ctx.c === 'V') {
+        ctx.t[1] += ctx.y
+        return
+    }
+    if (ctx.c === 'H') {
+        ctx.t[1] += ctx.x
+        return
+    }
+    for (let j = 1; j < ctx.t.length; j += 2) {
+        ctx.t[j] += ctx.x
+        ctx.t[j + 1] += ctx.y
+    }
 }
 
 function parseSegments(d: string): (string | number)[][] {

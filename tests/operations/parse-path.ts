@@ -1,4 +1,4 @@
-import { assert } from 'chai';
+import { assert } from 'chai'
 import { parsePath } from '../../src/operations/parse-path'
 
 describe('parsePath()', () => {
@@ -39,10 +39,17 @@ describe('parsePath()', () => {
     })
 
     it('parses a relative line (s)', () => {
-        assert.deepEqual(parsePath('M 10 10 s 10 5 25 25'), [[10, 10, 20, 15, 20, 15, 35, 35]])
+        assert.deepEqual(parsePath('M 10 10 s 10 5 25 25'), [[10, 10, 10, 10, 20, 15, 35, 35]])
     })
     it('parses an absolute line (S)', () => {
-        assert.deepEqual(parsePath('M 10 10 S 20 15 35 35'), [[10, 10, 20, 15, 20, 15, 35, 35]])
+        assert.deepEqual(parsePath('M 10 10 S 20 15 35 35'), [[10, 10, 10, 10, 20, 15, 35, 35]])
+    })
+
+    // checkpoint
+    it('parses a relative line (s) as a continuation of s', () => {
+        const actual = parsePath('M 10 10 s 10 40 25 25 s 10 40 25 25')[0]
+        console.log(actual)
+        assert.deepEqual(actual, [10, 10, 10, 10, 20, 50, 35, 35, 50, 20, 45, 75, 60, 60])
     })
 
     it('parses a relative line (q)', () => {
