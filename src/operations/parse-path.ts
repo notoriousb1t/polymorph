@@ -258,7 +258,7 @@ function parseSegments(d: string): (string | number)[][] {
     // split on double-space (splits on command segment)
     // parse each segment into an of list of command + args
     return d
-        .replace(/[\^\s]*([mhvlzcsqta]|[-]?[\d]*[.]?[\d]+)[\$\s]*/gi, ' $1')
+        .replace(/[\^\s]?([mhvlzcsqta]|\-?\d*\.?\d+)[,\$\s]?/gi, ' $1')
         .replace(/([mhvlzcsqta])/gi, ' $1')
         .trim()
         .split('  ')
