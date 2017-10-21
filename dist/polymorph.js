@@ -5,10 +5,42 @@ var _ = undefined;
 var V = 'V';
 var H = 'H';
 var Z = 'Z';
+var M = 'M';
 var C = 'C';
 var S = 'S';
 var Q = 'Q';
 var T = 'T';
+
+function renderPath(ns) {
+    var parts = [];
+    for (var i = 0; i < ns.length; i++) {
+        var n = ns[i];
+        parts.push(M, formatNumber(n[0]), formatNumber(n[1]), C);
+        for (var f = 2; f < n.length; f++) {
+            parts.push(formatNumber(n[f]));
+        }
+    }
+    return parts.join(' ');
+}
+function formatNumber(n) {
+    return (Math.round(n * 100) / 100).toString();
+}
+
+function morph(leftSegments, rightSegments) {
+    var l = leftSegments.map(function (s) { return s.d; });
+    var r = rightSegments.map(function (s) { return s.d; });
+    return function (offset) { return renderPath(mixPoints(l, r, offset)); };
+}
+function mixPoints(l, r, o) {
+    return l.map(function (a, h) { return mix(a, r[h], o); });
+}
+function mix(a, b, o) {
+    var results = [];
+    for (var i = 0; i < a.length; i++) {
+        results.push(a[i] + (b[i] - a[i]) * o);
+    }
+    return results;
+}
 
 function coalesce(current, fallback) {
     return current === _ ? fallback : current;
@@ -177,23 +209,12 @@ function parseCommand(str, i) {
     return i === 0 ? str : +str;
 }
 
-function renderPath(ns) {
-    var parts = [];
-    for (var i = 0; i < ns.length; i++) {
-        var n = ns[i];
-        parts.push('M', formatNumber(n[0]), formatNumber(n[1]), 'C');
-        for (var f = 2; f < n.length; f++) {
-            parts.push(formatNumber(n[f]));
-        }
-    }
-    return parts.join(' ');
-}
-function formatNumber(n) {
-    return (Math.round(n * 100) / 100).toString();
+function toBezier(d) {
+    return renderPath(parsePath(d));
 }
 
-exports.parsePath = parsePath;
-exports.renderPath = renderPath;
+exports.morph = morph;
+exports.toBezier = toBezier;
 
 return exports;
 
