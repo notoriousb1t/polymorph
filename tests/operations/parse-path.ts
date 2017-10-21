@@ -3,6 +3,13 @@ import { parsePath } from '../../src/operations/parse-path'
 import { renderPath } from '../../src/operations/render-path'
 
 describe('parsePath()', () => {
+    it('parses terms properly with spaces', () => {
+        assert.deepEqual(parsePath('M 10 42'), [[10, 42]])
+    })
+    it('parses terms properly with commas', () => {
+        assert.deepEqual(parsePath('M10,42'), [[10, 42]])
+    })
+
     it('parses move (M | m)', () => {
         assert.deepEqual(parsePath('M 10 42'), [[10, 42]])
     })
