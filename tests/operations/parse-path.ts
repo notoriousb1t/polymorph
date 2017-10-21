@@ -72,9 +72,7 @@ describe('parsePath()', () => {
     })
 
     it('parses c followed by s', () => {
-        const actual = parsePath('M 10 10 c10 10 10 40 25 25 s10 40 25 25')
-        console.log(renderPath(actual))
-        assert.deepEqual(actual, [[]])
+        assert.deepEqual(renderPath(parsePath('M 10 10 c10 10 10 40 25 25 s10 40 25 25')), 'M 10 10 C 20 20 20 50 35 35 50 20 45 75 60 60')
     })
 
     it('parses q', () => {
