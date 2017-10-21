@@ -2,6 +2,8 @@ var polymorph = (function (exports) {
 'use strict';
 
 var _ = undefined;
+var V = 'V';
+var H = 'H';
 var Z = 'Z';
 var C = 'C';
 var S = 'S';
@@ -12,53 +14,54 @@ function coalesce(current, fallback) {
     return current === _ ? fallback : current;
 }
 
+var argLengths = { M: 2, H: 1, V: 1, L: 2, Z: 0, C: 6, S: 4, Q: 4, T: 2 };
 var quadraticRatio = 2.0 / 3;
 function m(ctx) {
     var n = ctx.t;
-    addSegment(ctx, n[1], n[2]);
+    addSegment(ctx, n[0], n[1]);
 }
 function h(ctx) {
-    addCurve(ctx, _, _, _, _, ctx.t[1], _);
+    addCurve(ctx, _, _, _, _, ctx.t[0], _);
 }
 function v(ctx) {
-    addCurve(ctx, _, _, _, _, _, ctx.t[1]);
+    addCurve(ctx, _, _, _, _, _, ctx.t[0]);
 }
 function l(ctx) {
     var n = ctx.t;
-    addCurve(ctx, _, _, _, _, n[1], n[2]);
+    addCurve(ctx, _, _, _, _, n[0], n[1]);
 }
 function z(ctx) {
     addCurve(ctx, _, _, _, _, ctx.p[0], ctx.p[1]);
 }
 function c(ctx) {
     var n = ctx.t;
-    addCurve(ctx, n[1], n[2], n[3], n[4], n[5], n[6]);
-    ctx.cx = n[1];
-    ctx.cy = n[2];
+    addCurve(ctx, n[0], n[1], n[2], n[3], n[4], n[5]);
+    ctx.cx = n[0];
+    ctx.cy = n[1];
 }
 function s(ctx) {
     var n = ctx.t;
     var isInitialCurve = ctx.lc !== S && ctx.lc !== C;
     var x1 = isInitialCurve ? _ : ctx.x * 2 - ctx.cx;
     var y1 = isInitialCurve ? _ : ctx.y * 2 - ctx.cy;
-    addCurve(ctx, x1, y1, n[1], n[2], n[3], n[4]);
-    ctx.cx = n[1];
-    ctx.cy = n[2];
+    addCurve(ctx, x1, y1, n[0], n[1], n[2], n[3]);
+    ctx.cx = n[0];
+    ctx.cy = n[1];
 }
 function q(ctx) {
     var n = ctx.t;
-    var cx1 = n[1];
-    var cy1 = n[2];
-    var dx = n[3];
-    var dy = n[4];
+    var cx1 = n[0];
+    var cy1 = n[1];
+    var dx = n[2];
+    var dy = n[3];
     addCurve(ctx, ctx.x + (cx1 - ctx.x) * quadraticRatio, ctx.y + (cy1 - ctx.y) * quadraticRatio, dx + (cx1 - dx) * quadraticRatio, dy + (cy1 - dy) * quadraticRatio, dx, dy);
     ctx.cx = cx1;
     ctx.cy = cy1;
 }
 function t(ctx) {
     var n = ctx.t;
-    var dx = n[1];
-    var dy = n[2];
+    var dx = n[0];
+    var dy = n[1];
     var x1, y1, x2, y2;
     if (ctx.lc === Q || ctx.lc === T) {
         var cx1 = ctx.x * 2 - ctx.cx;
@@ -125,31 +128,38 @@ function parsePath(d) {
         var terms = segments[i];
         var commandLetter = terms[0];
         var command = commandLetter.toUpperCase();
+        var isRelative = command !== Z && command !== commandLetter;
         ctx.c = command;
-        ctx.t = terms;
-        var parser = parsers[ctx.c];
+        var parser = parsers[command];
+        var maxLength = argLengths[command];
         if (!parser) {
             throw new Error(ctx.c + ' is not supported');
         }
-        if (command !== Z && command !== commandLetter) {
-            ensureAbsolute(ctx);
-        }
-        parser(ctx);
+        var t2 = terms;
+        var k = 1;
+        do {
+            ctx.t = t2.slice(k, k + maxLength);
+            if (isRelative) {
+                convertToAbsolute(ctx);
+            }
+            parser(ctx);
+            k += maxLength;
+        } while (k < t2.length);
     }
     return ctx.s;
 }
-function ensureAbsolute(ctx) {
-    if (ctx.c === 'V') {
-        ctx.t[1] += ctx.y;
-        return;
+function convertToAbsolute(ctx) {
+    if (ctx.c === V) {
+        ctx.t[0] += ctx.y;
     }
-    if (ctx.c === 'H') {
-        ctx.t[1] += ctx.x;
-        return;
+    else if (ctx.c === H) {
+        ctx.t[0] += ctx.x;
     }
-    for (var j = 1; j < ctx.t.length; j += 2) {
-        ctx.t[j] += ctx.x;
-        ctx.t[j + 1] += ctx.y;
+    else {
+        for (var j = 0; j < ctx.t.length; j += 2) {
+            ctx.t[j] += ctx.x;
+            ctx.t[j + 1] += ctx.y;
+        }
     }
 }
 function parseSegments(d) {
