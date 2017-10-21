@@ -1,8 +1,8 @@
-import { _, Z, T, Q, S, C } from '../constants'
+import { _, Z, T, Q, S, C, V, H } from '../constants'
 import { coalesce } from '../utilities/coalesce'
 
 // for parsing poly-commands
-// const argLengths = { M: 2, H: 1, V: 1, L: 2, Z: 0, C: 6, S: 4, Q: 4 }
+const argLengths = { M: 2, H: 1, V: 1, L: 2, Z: 0, C: 6, S: 4, Q: 4, T: 2 }
 
 interface IParseContext {
     /**
@@ -47,28 +47,28 @@ const quadraticRatio = 2.0 / 3
 
 function m(ctx: IParseContext): void {
     const n = ctx.t
-    addSegment(ctx, n[1], n[2])
+    addSegment(ctx, n[0], n[1])
 }
 function h(ctx: IParseContext): void {
-    addCurve(ctx, _, _, _, _, ctx.t[1], _)
+    addCurve(ctx, _, _, _, _, ctx.t[0], _)
 }
 function v(ctx: IParseContext): void {
-    addCurve(ctx, _, _, _, _, _, ctx.t[1])
+    addCurve(ctx, _, _, _, _, _, ctx.t[0])
 }
 function l(ctx: IParseContext): void {
     const n = ctx.t
-    addCurve(ctx, _, _, _, _, n[1], n[2])
+    addCurve(ctx, _, _, _, _, n[0], n[1])
 }
 function z(ctx: IParseContext): void {
     addCurve(ctx, _, _, _, _, ctx.p[0], ctx.p[1])
 }
 function c(ctx: IParseContext): void {
     const n = ctx.t
-    addCurve(ctx, n[1], n[2], n[3], n[4], n[5], n[6])
+    addCurve(ctx, n[0], n[1], n[2], n[3], n[4], n[5])
 
     // set last control point for subsequence C/S
-    ctx.cx = n[1]
-    ctx.cy = n[2]
+    ctx.cx = n[0]
+    ctx.cy = n[1]
 }
 function s(ctx: IParseContext): void {
     const n = ctx.t
@@ -76,18 +76,18 @@ function s(ctx: IParseContext): void {
     const x1 = isInitialCurve ? _ : ctx.x * 2 - ctx.cx
     const y1 = isInitialCurve ? _ : ctx.y * 2 - ctx.cy
 
-    addCurve(ctx, x1, y1, n[1], n[2], n[3], n[4])
+    addCurve(ctx, x1, y1, n[0], n[1], n[2], n[3])
 
     // set last control point for subsequence C/S
-    ctx.cx = n[1]
-    ctx.cy = n[2]
+    ctx.cx = n[0]
+    ctx.cy = n[1]
 }
 function q(ctx: IParseContext): void {
     const n = ctx.t
-    const cx1 = n[1]
-    const cy1 = n[2]
-    const dx = n[3]
-    const dy = n[4]
+    const cx1 = n[0]
+    const cy1 = n[1]
+    const dx = n[2]
+    const dy = n[3]
 
     addCurve(
         ctx,
@@ -104,26 +104,26 @@ function q(ctx: IParseContext): void {
 }
 function t(ctx: IParseContext): void {
     const n = ctx.t
-    const dx = n[1]
-    const dy = n[2]
+    const dx = n[0]
+    const dy = n[1]
 
     let x1: number, y1: number, x2: number, y2: number
     if (ctx.lc === Q || ctx.lc === T) {
-      const cx1 = ctx.x * 2 - ctx.cx
-      const cy1 = ctx.y * 2 - ctx.cy
-      x1 = ctx.x + (cx1 - ctx.x) * quadraticRatio;
-      y1 = ctx.y + (cy1 - ctx.y) * quadraticRatio;
-      x2 = dx + (cx1 - dx) * quadraticRatio;
-      y2 = dy + (cy1 - dy) * quadraticRatio;
+        const cx1 = ctx.x * 2 - ctx.cx
+        const cy1 = ctx.y * 2 - ctx.cy
+        x1 = ctx.x + (cx1 - ctx.x) * quadraticRatio
+        y1 = ctx.y + (cy1 - ctx.y) * quadraticRatio
+        x2 = dx + (cx1 - dx) * quadraticRatio
+        y2 = dy + (cy1 - dy) * quadraticRatio
     } else {
-      x1 = x2 = ctx.x
-      y1 = y2 = ctx.y
+        x1 = x2 = ctx.x
+        y1 = y2 = ctx.y
     }
 
     addCurve(ctx, x1, y1, x2, y2, dx, dy)
 
-    ctx.cx = x2;
-    ctx.cy = y2;
+    ctx.cx = x2
+    ctx.cy = y2
 }
 
 const parsers = {
@@ -206,39 +206,48 @@ export function parsePath(d: string): number[][] {
 
         // setup context
         const command = commandLetter.toUpperCase()
+        const isRelative = command !== Z && command !== commandLetter
+
+        // set command on context
         ctx.c = command
-        ctx.t = terms as number[]
 
         // find command parser
-        const parser = parsers[ctx.c]
+        const parser = parsers[command]
+        const maxLength = argLengths[command]
         if (!parser) {
             throw new Error(ctx.c + ' is not supported')
         }
 
-        if (command !== Z && command !== commandLetter) {
-            ensureAbsolute(ctx)
-        }
+        const t2 = terms as number[]
+        let k = 1
+        do {
+            // split this segment into a subsegment
+            ctx.t = t2.slice(k, k + maxLength)
 
-        // parse
-        parser(ctx)
+            // convert to absolute if necessary
+            if (isRelative) {
+                convertToAbsolute(ctx)
+            }
+            // parse
+            parser(ctx)
+            k += maxLength
+        } while (k < t2.length)
     }
 
     // return points
     return ctx.s
 }
 
-function ensureAbsolute(ctx: IParseContext): void {
-    if (ctx.c === 'V') {
-        ctx.t[1] += ctx.y
-        return
-    }
-    if (ctx.c === 'H') {
-        ctx.t[1] += ctx.x
-        return
-    }
-    for (let j = 1; j < ctx.t.length; j += 2) {
-        ctx.t[j] += ctx.x
-        ctx.t[j + 1] += ctx.y
+function convertToAbsolute(ctx: IParseContext): void {
+    if (ctx.c === V) {
+        ctx.t[0] += ctx.y
+    } else if (ctx.c === H) {
+        ctx.t[0] += ctx.x
+    } else {
+        for (let j = 0; j < ctx.t.length; j += 2) {
+            ctx.t[j] += ctx.x
+            ctx.t[j + 1] += ctx.y
+        }
     }
 }
 
