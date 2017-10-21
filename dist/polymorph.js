@@ -196,7 +196,7 @@ function convertToAbsolute(ctx) {
 }
 function parseSegments(d) {
     return d
-        .replace(/[\^\s]*([mhvlzcsqta]|[-]?[\d]*[.]?[\d]+)[\$\s]*/gi, ' $1')
+        .replace(/[\^\s]?([mhvlzcsqta]|\-?\d*\.?\d+)[,\$\s]?/gi, ' $1')
         .replace(/([mhvlzcsqta])/gi, ' $1')
         .trim()
         .split('  ')

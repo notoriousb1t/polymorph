@@ -67,8 +67,8 @@ function c(ctx: IParseContext): void {
     addCurve(ctx, n[0], n[1], n[2], n[3], n[4], n[5])
 
     // set last control point for subsequence C/S
-    ctx.cx = n[0]
-    ctx.cy = n[1]
+    ctx.cx = n[2]
+    ctx.cy = n[3]
 }
 function s(ctx: IParseContext): void {
     const n = ctx.t
