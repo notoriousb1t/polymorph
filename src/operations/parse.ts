@@ -17,9 +17,9 @@ function createPathSegmentArray(points: number[]): IPathSegment {
         let y = points[i + 5]
 
         xmin = Math.min(xmin, x)
-        xmax = Math.min(xmax, x)
+        xmax = Math.max(xmax, x)
         ymin = Math.min(ymin, y)
-        ymax = Math.min(ymax, y)
+        ymax = Math.max(ymax, y)
     }
 
     return {

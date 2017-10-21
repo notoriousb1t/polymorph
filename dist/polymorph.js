@@ -11,37 +11,6 @@ var S = 'S';
 var Q = 'Q';
 var T = 'T';
 
-function renderPath(ns) {
-    var parts = [];
-    for (var i = 0; i < ns.length; i++) {
-        var n = ns[i];
-        parts.push(M, formatNumber(n[0]), formatNumber(n[1]), C);
-        for (var f = 2; f < n.length; f++) {
-            parts.push(formatNumber(n[f]));
-        }
-    }
-    return parts.join(' ');
-}
-function formatNumber(n) {
-    return (Math.round(n * 100) / 100).toString();
-}
-
-function morph(leftSegments, rightSegments) {
-    var l = leftSegments.map(function (s) { return s.d; });
-    var r = rightSegments.map(function (s) { return s.d; });
-    return function (offset) { return renderPath(mixPoints(l, r, offset)); };
-}
-function mixPoints(l, r, o) {
-    return l.map(function (a, h) { return mix(a, r[h], o); });
-}
-function mix(a, b, o) {
-    var results = [];
-    for (var i = 0; i < a.length; i++) {
-        results.push(a[i] + (b[i] - a[i]) * o);
-    }
-    return results;
-}
-
 function coalesce(current, fallback) {
     return current === _ ? fallback : current;
 }
@@ -209,10 +178,70 @@ function parseCommand(str, i) {
     return i === 0 ? str : +str;
 }
 
+function parse(d) {
+    return parsePath(d).map(createPathSegmentArray);
+}
+function createPathSegmentArray(points) {
+    var xmin, xmax, ymin, ymax;
+    xmin = xmax = points[0];
+    ymin = ymax = points[1];
+    for (var i = 2; i < points.length; i += 6) {
+        var x = points[i + 4];
+        var y = points[i + 5];
+        xmin = Math.min(xmin, x);
+        xmax = Math.min(xmax, x);
+        ymin = Math.min(ymin, y);
+        ymax = Math.min(ymax, y);
+    }
+    return {
+        d: points,
+        x: xmin,
+        y: ymin,
+        w: xmax - xmin,
+        h: ymax - ymin
+    };
+}
+
+function renderPath(ns) {
+    var parts = [];
+    for (var i = 0; i < ns.length; i++) {
+        var n = ns[i];
+        parts.push(M, formatNumber(n[0]), formatNumber(n[1]), C);
+        for (var f = 2; f < n.length; f++) {
+            parts.push(formatNumber(n[f]));
+        }
+    }
+    return parts.join(' ');
+}
+function formatNumber(n) {
+    return (Math.round(n * 100) / 100).toString();
+}
+
+function mix(leftSegments, rightSegments) {
+    var l = leftSegments.map(function (s) { return s.d; });
+    var r = rightSegments.map(function (s) { return s.d; });
+    return function (offset) { return renderPath(mixPointArrays(l, r, offset)); };
+}
+function mixPointArrays(l, r, o) {
+    return l.map(function (a, h) { return mixPoints(a, r[h], o); });
+}
+function mixPoints(a, b, o) {
+    var results = [];
+    for (var i = 0; i < a.length; i++) {
+        results.push(a[i] + (b[i] - a[i]) * o);
+    }
+    return results;
+}
+
+function morph(left, right) {
+    return mix(parse(left), parse(right));
+}
+
 function toBezier(d) {
     return renderPath(parsePath(d));
 }
 
+exports.parse = parse;
 exports.morph = morph;
 exports.toBezier = toBezier;
 
