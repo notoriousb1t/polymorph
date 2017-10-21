@@ -6,4 +6,5 @@ export const V = 'V',
     M = 'M',
     C = 'C',
     S = 'S',
-    Q = 'Q'
+    Q = 'Q',
+    T = 'T'

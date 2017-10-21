@@ -1,4 +1,4 @@
-import { _, S, C, Z } from '../constants'
+import { _, S, C, Z, T, Q } from '../constants'
 import { coalesce } from '../utilities/coalesce'
 
 // for parsing poly-commands
@@ -60,21 +60,29 @@ const parsers = {
     S(ctx: IParseContext): void {
         const t = ctx.t
         const p = ctx.p
-        const isLastCurve = ctx.lc === S || ctx.lc === C
-
-        let x1: number = _
-        let y1: number = _
-        if (isLastCurve) {
-            const len = p.length
-            x1 = p[len - 2] * 2 - p[len - 4]
-            y1 = p[len - 1] * 2 - p[len - 3]
-        }
+        const len = p.length
+        const isInitialCurve = ctx.lc !== S && ctx.lc !== C
+        const x1 = isInitialCurve ? _ : ctx.x * 2 - p[len - 4]
+        const y1 = isInitialCurve ? _ : ctx.y * 2 - p[len - 3]
 
         addCurve(ctx, x1, y1, t[1], t[2], t[3], t[4])
     },
     Q(ctx: IParseContext): void {
         const n = ctx.t
         addCurve(ctx, n[1], n[2], n[1], n[2], n[3], n[4])
+    },
+    T(ctx: IParseContext): void {
+      const t = ctx.t
+      const p = ctx.p
+
+      let x1: number, y1: number;
+      if (ctx.lc === Q || ctx.lc === T) {
+        const len = p.length
+        x1 = ctx.x * 2 - p[len - 4]
+        y1 = ctx.y * 2 - p[len - 3]
+      }
+
+      addCurve(ctx, x1, y1, x1, y1, t[1], t[2])
     }
 }
 
