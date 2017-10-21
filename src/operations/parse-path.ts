@@ -1,4 +1,4 @@
-import { _, S, C, Z, T, Q } from '../constants'
+import { _, Z, T, Q, S, C } from '../constants'
 import { coalesce } from '../utilities/coalesce'
 
 // for parsing poly-commands
@@ -13,6 +13,14 @@ interface IParseContext {
      * Cursor Y position
      */
     y: number
+    /**
+     * Last Control X
+     */
+    cx: number
+    /**
+     * Last Control Y
+     */
+    cy: number
     /**
      * Last command that was seen
      */
@@ -35,55 +43,99 @@ interface IParseContext {
     p: number[]
 }
 
-const parsers = {
-    M(ctx: IParseContext): void {
-        const n = ctx.t
-        addSegment(ctx, n[1], n[2])
-    },
-    H(ctx: IParseContext): void {
-        addCurve(ctx, _, _, _, _, ctx.t[1], _)
-    },
-    V(ctx: IParseContext): void {
-        addCurve(ctx, _, _, _, _, _, ctx.t[1])
-    },
-    L(ctx: IParseContext): void {
-        const n = ctx.t
-        addCurve(ctx, _, _, _, _, n[1], n[2])
-    },
-    Z(ctx: IParseContext): void {
-        addCurve(ctx, _, _, _, _, ctx.p[0], ctx.p[1])
-    },
-    C(ctx: IParseContext): void {
-        const n = ctx.t
-        addCurve(ctx, n[1], n[2], n[3], n[4], n[5], n[6])
-    },
-    S(ctx: IParseContext): void {
-        const t = ctx.t
-        const p = ctx.p
-        const len = p.length
-        const isInitialCurve = ctx.lc !== S && ctx.lc !== C
-        const x1 = isInitialCurve ? _ : ctx.x * 2 - p[len - 4]
-        const y1 = isInitialCurve ? _ : ctx.y * 2 - p[len - 3]
+const quadraticRatio = 2.0 / 3
 
-        addCurve(ctx, x1, y1, t[1], t[2], t[3], t[4])
-    },
-    Q(ctx: IParseContext): void {
-        const n = ctx.t
-        addCurve(ctx, n[1], n[2], n[1], n[2], n[3], n[4])
-    },
-    T(ctx: IParseContext): void {
-      const t = ctx.t
-      const p = ctx.p
+function m(ctx: IParseContext): void {
+    const n = ctx.t
+    addSegment(ctx, n[1], n[2])
+}
+function h(ctx: IParseContext): void {
+    addCurve(ctx, _, _, _, _, ctx.t[1], _)
+}
+function v(ctx: IParseContext): void {
+    addCurve(ctx, _, _, _, _, _, ctx.t[1])
+}
+function l(ctx: IParseContext): void {
+    const n = ctx.t
+    addCurve(ctx, _, _, _, _, n[1], n[2])
+}
+function z(ctx: IParseContext): void {
+    addCurve(ctx, _, _, _, _, ctx.p[0], ctx.p[1])
+}
+function c(ctx: IParseContext): void {
+    const n = ctx.t
+    addCurve(ctx, n[1], n[2], n[3], n[4], n[5], n[6])
 
-      let x1: number, y1: number;
-      if (ctx.lc === Q || ctx.lc === T) {
-        const len = p.length
-        x1 = ctx.x * 2 - p[len - 4]
-        y1 = ctx.y * 2 - p[len - 3]
-      }
+    // set last control point for subsequence C/S
+    ctx.cx = n[1]
+    ctx.cy = n[2]
+}
+function s(ctx: IParseContext): void {
+    const n = ctx.t
+    const isInitialCurve = ctx.lc !== S && ctx.lc !== C
+    const x1 = isInitialCurve ? _ : ctx.x * 2 - ctx.cx
+    const y1 = isInitialCurve ? _ : ctx.y * 2 - ctx.cy
 
-      addCurve(ctx, x1, y1, x1, y1, t[1], t[2])
+    addCurve(ctx, x1, y1, n[1], n[2], n[3], n[4])
+
+    // set last control point for subsequence C/S
+    ctx.cx = n[1]
+    ctx.cy = n[2]
+}
+function q(ctx: IParseContext): void {
+    const n = ctx.t
+    const cx1 = n[1]
+    const cy1 = n[2]
+    const dx = n[3]
+    const dy = n[4]
+
+    addCurve(
+        ctx,
+        ctx.x + (cx1 - ctx.x) * quadraticRatio,
+        ctx.y + (cy1 - ctx.y) * quadraticRatio,
+        dx + (cx1 - dx) * quadraticRatio,
+        dy + (cy1 - dy) * quadraticRatio,
+        dx,
+        dy
+    )
+
+    ctx.cx = cx1
+    ctx.cy = cy1
+}
+function t(ctx: IParseContext): void {
+    const n = ctx.t
+    const dx = n[1]
+    const dy = n[2]
+
+    let x1: number, y1: number, x2: number, y2: number
+    if (ctx.lc === Q || ctx.lc === T) {
+      const cx1 = ctx.x * 2 - ctx.cx
+      const cy1 = ctx.y * 2 - ctx.cy
+      x1 = ctx.x + (cx1 - ctx.x) * quadraticRatio;
+      y1 = ctx.y + (cy1 - ctx.y) * quadraticRatio;
+      x2 = dx + (cx1 - dx) * quadraticRatio;
+      y2 = dy + (cy1 - dy) * quadraticRatio;
+    } else {
+      x1 = x2 = ctx.x
+      y1 = y2 = ctx.y
     }
+
+    addCurve(ctx, x1, y1, x2, y2, dx, dy)
+
+    ctx.cx = x2;
+    ctx.cy = y2;
+}
+
+const parsers = {
+    M: m,
+    H: h,
+    V: v,
+    L: l,
+    Z: z,
+    C: c,
+    S: s,
+    Q: q,
+    T: t
 }
 
 function addSegment(ctx: IParseContext, x: number, y: number): void {
@@ -137,6 +189,8 @@ export function parsePath(d: string): number[][] {
         y: 0,
         lc: _,
         c: _,
+        cx: _,
+        cy: _,
         t: _,
         s: [],
         p: _
@@ -207,7 +261,7 @@ function parseSegment(s2: string): (string | number)[] {
     return s2.split(' ').map(parseCommand)
 }
 
-function parseCommand(s: string, i: number): string | number {
+function parseCommand(str: string, i: number): string | number {
     // convert all terms except command into a number
-    return i === 0 ? s : +s
+    return i === 0 ? str : +str
 }

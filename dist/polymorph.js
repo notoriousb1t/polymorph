@@ -12,52 +12,80 @@ function coalesce(current, fallback) {
     return current === _ ? fallback : current;
 }
 
-var parsers = {
-    M: function (ctx) {
-        var n = ctx.t;
-        addSegment(ctx, n[1], n[2]);
-    },
-    H: function (ctx) {
-        addCurve(ctx, _, _, _, _, ctx.t[1], _);
-    },
-    V: function (ctx) {
-        addCurve(ctx, _, _, _, _, _, ctx.t[1]);
-    },
-    L: function (ctx) {
-        var n = ctx.t;
-        addCurve(ctx, _, _, _, _, n[1], n[2]);
-    },
-    Z: function (ctx) {
-        addCurve(ctx, _, _, _, _, ctx.p[0], ctx.p[1]);
-    },
-    C: function (ctx) {
-        var n = ctx.t;
-        addCurve(ctx, n[1], n[2], n[3], n[4], n[5], n[6]);
-    },
-    S: function (ctx) {
-        var t = ctx.t;
-        var p = ctx.p;
-        var len = p.length;
-        var isInitialCurve = ctx.lc !== S && ctx.lc !== C;
-        var x1 = isInitialCurve ? _ : ctx.x * 2 - p[len - 4];
-        var y1 = isInitialCurve ? _ : ctx.y * 2 - p[len - 3];
-        addCurve(ctx, x1, y1, t[1], t[2], t[3], t[4]);
-    },
-    Q: function (ctx) {
-        var n = ctx.t;
-        addCurve(ctx, n[1], n[2], n[1], n[2], n[3], n[4]);
-    },
-    T: function (ctx) {
-        var t = ctx.t;
-        var p = ctx.p;
-        var x1, y1;
-        if (ctx.lc === Q || ctx.lc === T) {
-            var len = p.length;
-            x1 = ctx.x * 2 - p[len - 4];
-            y1 = ctx.y * 2 - p[len - 3];
-        }
-        addCurve(ctx, x1, y1, x1, y1, t[1], t[2]);
+var quadraticRatio = 2.0 / 3;
+function m(ctx) {
+    var n = ctx.t;
+    addSegment(ctx, n[1], n[2]);
+}
+function h(ctx) {
+    addCurve(ctx, _, _, _, _, ctx.t[1], _);
+}
+function v(ctx) {
+    addCurve(ctx, _, _, _, _, _, ctx.t[1]);
+}
+function l(ctx) {
+    var n = ctx.t;
+    addCurve(ctx, _, _, _, _, n[1], n[2]);
+}
+function z(ctx) {
+    addCurve(ctx, _, _, _, _, ctx.p[0], ctx.p[1]);
+}
+function c(ctx) {
+    var n = ctx.t;
+    addCurve(ctx, n[1], n[2], n[3], n[4], n[5], n[6]);
+    ctx.cx = n[1];
+    ctx.cy = n[2];
+}
+function s(ctx) {
+    var n = ctx.t;
+    var isInitialCurve = ctx.lc !== S && ctx.lc !== C;
+    var x1 = isInitialCurve ? _ : ctx.x * 2 - ctx.cx;
+    var y1 = isInitialCurve ? _ : ctx.y * 2 - ctx.cy;
+    addCurve(ctx, x1, y1, n[1], n[2], n[3], n[4]);
+    ctx.cx = n[1];
+    ctx.cy = n[2];
+}
+function q(ctx) {
+    var n = ctx.t;
+    var cx1 = n[1];
+    var cy1 = n[2];
+    var dx = n[3];
+    var dy = n[4];
+    addCurve(ctx, ctx.x + (cx1 - ctx.x) * quadraticRatio, ctx.y + (cy1 - ctx.y) * quadraticRatio, dx + (cx1 - dx) * quadraticRatio, dy + (cy1 - dy) * quadraticRatio, dx, dy);
+    ctx.cx = cx1;
+    ctx.cy = cy1;
+}
+function t(ctx) {
+    var n = ctx.t;
+    var dx = n[1];
+    var dy = n[2];
+    var x1, y1, x2, y2;
+    if (ctx.lc === Q || ctx.lc === T) {
+        var cx1 = ctx.x * 2 - ctx.cx;
+        var cy1 = ctx.y * 2 - ctx.cy;
+        x1 = ctx.x + (cx1 - ctx.x) * quadraticRatio;
+        y1 = ctx.y + (cy1 - ctx.y) * quadraticRatio;
+        x2 = dx + (cx1 - dx) * quadraticRatio;
+        y2 = dy + (cy1 - dy) * quadraticRatio;
     }
+    else {
+        x1 = x2 = ctx.x;
+        y1 = y2 = ctx.y;
+    }
+    addCurve(ctx, x1, y1, x2, y2, dx, dy);
+    ctx.cx = x2;
+    ctx.cy = y2;
+}
+var parsers = {
+    M: m,
+    H: h,
+    V: v,
+    L: l,
+    Z: z,
+    C: c,
+    S: s,
+    Q: q,
+    T: t
 };
 function addSegment(ctx, x, y) {
     ctx.x = x;
@@ -86,6 +114,8 @@ function parsePath(d) {
         y: 0,
         lc: _,
         c: _,
+        cx: _,
+        cy: _,
         t: _,
         s: [],
         p: _
@@ -133,8 +163,8 @@ function parseSegments(d) {
 function parseSegment(s2) {
     return s2.split(' ').map(parseCommand);
 }
-function parseCommand(s, i) {
-    return i === 0 ? s : +s;
+function parseCommand(str, i) {
+    return i === 0 ? str : +str;
 }
 
 function renderPath(ns) {

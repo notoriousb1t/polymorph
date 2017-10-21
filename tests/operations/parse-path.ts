@@ -1,5 +1,6 @@
 import { assert } from 'chai'
 import { parsePath } from '../../src/operations/parse-path'
+import { renderPath } from '../../src/main'
 
 describe('parsePath()', () => {
     it('parses move (M | m)', () => {
@@ -51,25 +52,28 @@ describe('parsePath()', () => {
         ])
     })
     it('parses q', () => {
-        assert.deepEqual(parsePath('M 10 10 q 10 5 15 25'), [[10, 10, 20, 15, 20, 15, 25, 35]])
+        assert.deepEqual(renderPath(parsePath('M 10 10 q 10 5 15 25')), 'M 10 10 C 16.67 13.33 21.67 21.67 25 35')
     })
     it('parses Q', () => {
-        assert.deepEqual(parsePath('M 10 10 Q 20 15 25 35'), [[10, 10, 20, 15, 20, 15, 25, 35]])
+        assert.deepEqual(renderPath(parsePath('M 10 10 Q 20 15 25 35')), 'M 10 10 C 16.67 13.33 21.67 21.67 25 35')
     })
+
     it('parses t', () => {
-        assert.deepEqual(parsePath('M 10 10 t 15 25'), [[10, 10, 10, 10, 10, 10, 25, 35]])
+        assert.deepEqual(renderPath(parsePath('M 10 10 t 15 25')), 'M 10 10 C 10 10 10 10 25 35')
     })
     it('parses t + t', () => {
-        assert.deepEqual(parsePath('M 10 10 t 15 25 t 25 15'), [
-            [10, 10, 10, 10, 10, 10, 25, 35, 40, 60, 40, 60, 50, 50]
-        ])
+        assert.deepEqual(
+            renderPath(parsePath('M 10 10 t 15 25 t 25 15')),
+            'M 10 10 C 10 10 10 10 25 35 35 51.67 43.33 56.67 50 50'
+        )
     })
     it('parses T', () => {
-        assert.deepEqual(parsePath('M 10 10 T 25 35'), [[10, 10, 10, 10, 10, 10, 25, 35]])
+        assert.deepEqual(renderPath(parsePath('M 10 10 T 25 35')), 'M 10 10 C 10 10 10 10 25 35')
     })
     it('parses T + T', () => {
-        assert.deepEqual(parsePath('M 10 10 T 25 35 T 70 50'), [
-            [10, 10, 10, 10, 10, 10, 25, 35, 40, 60, 40, 60, 70, 50]
-        ])
+        assert.deepEqual(
+            renderPath(parsePath('M 10 10 T 25 35 T 70 50')),
+            'M 10 10 C 10 10 10 10 25 35 35 51.67 50 56.67 70 50'
+        )
     })
 })
