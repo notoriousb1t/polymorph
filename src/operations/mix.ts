@@ -15,10 +15,7 @@ export function mix(leftSegments: IPathSegment[], rightSegments: IPathSegment[])
         fillPoints(leftSegment[i], rightSegment[i])
     }
 
-    return (offset: number) =>
-        renderPath(
-            offset === 0 ? leftSegment : offset === 1 ? rightSegment : mixPointArrays(leftSegment, rightSegment, offset)
-        )
+    return (offset: number) => renderPath(mixPointArrays(leftSegment, rightSegment, offset))
 }
 
 function mixPointArrays(l: number[][], r: number[][], o: number): number[][] {
