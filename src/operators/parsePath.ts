@@ -1,5 +1,6 @@
 import { IPathSegment, IPath } from '../types'
 import { parsePoints } from './parsePoints'
+import { min, max } from '../utilities/math';
 
 function createPathSegmentArray(points: number[]): IPathSegment {
     let xmin: number, xmax: number, ymin: number, ymax: number
@@ -12,10 +13,10 @@ function createPathSegmentArray(points: number[]): IPathSegment {
         let x = points[i + 4]
         let y = points[i + 5]
 
-        xmin = Math.min(xmin, x)
-        xmax = Math.max(xmax, x)
-        ymin = Math.min(ymin, y)
-        ymax = Math.max(ymax, y)
+        xmin = min(xmin, x)
+        xmax = max(xmax, x)
+        ymin = min(ymin, y)
+        ymax = max(ymax, y)
     }
 
     return {

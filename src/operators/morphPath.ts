@@ -1,9 +1,6 @@
 import { IPathSegment, IPath } from '../types'
 import { renderPath } from './renderPath'
-import { weighPath } from './weighPath'
-import { reversePath } from './reversePath'
-
-const EPSILON = 2 ** -52;
+import { EPSILON, abs, floor, min } from '../utilities/math';
 
 /**
  * Returns a function to interpolate between the two path shapes.  polymorph.parse() must be called
@@ -19,34 +16,26 @@ export function morphPath(leftPath: IPath, rightPath: IPath): (offset: number) =
 
     const leftSegment = leftPath.data.map(selectPath)
     const rightSegment = rightPath.data.map(selectPath)
+    const length = leftSegment.length
 
-    for (let i = 0; i < leftSegment.length; i++) {
-        const left = leftSegment[i]
-        const right = rightSegment[i]
+    for (let i = 0; i < length; i++) {
         // ensure points in segments are equal length
-        fillPoints(left, right)
-
-        // weigh paths and use reversed right if necessary
-        // this is meant to minimize distance between points as a whole
-        const rightReversed = reversePath(right)
-        if (weighPath(left, right) > weighPath(left, rightReversed)) {
-            rightSegment[i] = rightReversed
-        }
+        fillPoints(leftSegment[i], rightSegment[i])
     }
 
     return (offset: number) => {
-      if (Math.abs(offset - 0) < EPSILON) {
-        return leftPath.path
-      }
-      if (Math.abs(offset - 1) < EPSILON) {
-        return rightPath.path
-      }
-      return renderPath(mixPointArrays(leftSegment, rightSegment, offset))
+        if (abs(offset - 0) < EPSILON) {
+            return leftPath.path
+        }
+        if (abs(offset - 1) < EPSILON) {
+            return rightPath.path
+        }
+        return renderPath(mixPointArrays(leftSegment, rightSegment, offset))
     }
 }
 
 function selectPath(s: IPathSegment): number[] {
-  return s.d
+    return s.d.slice()
 }
 
 function mixPointArrays(l: number[][], r: number[][], o: number): number[][] {
@@ -88,14 +77,9 @@ function fillPoints(larger: number[], smaller: number[]): void {
     const dist = numberToInsert / numberInLarger
 
     for (let i = 0; i < numberToInsert; i++) {
-        const index = Math.min(Math.floor(dist * i * 6) + 2, smaller.length)
+        const index = min(floor(dist * i * 6) + 2, smaller.length)
         const x = smaller[index - 2]
         const y = smaller[index - 1]
-
-        if (x !== x || y !== y) {
-            console.log('test', numberInSmaller, numberInLarger, numberToInsert, dist, index)
-        }
-
         smaller.splice(index, 0, x, y, x, y, x, y)
     }
 }

@@ -19,18 +19,18 @@
     "typescript": "^2.5.2",
     "uglify-js": "^3.1.1"
   },
-  "jsnext:main": "./lib.es2015/main.js",
+  "jsnext:main": "./lib.es2015/index.js",
   "homepage": "https://github.com/notoriousb1t/polymorph#readme",
   "license": "MIT",
-  "main": "./lib/main.js",
-  "module": "./lib.es2015/main.js",
+  "main": "./lib/index.js",
+  "module": "./lib.es2015/index.js",
   "name": "polymorph-js",
   "repository": {
     "type": "git",
     "url": "https://github.com/notoriousb1t/polymorph"
   },
-  "types": "./types/main",
-  "typings": "./types/main",
+  "types": "./types/index",
+  "typings": "./types/index",
   "typeRoots": [
     "node_modules/@types"
   ],

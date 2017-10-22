@@ -3,7 +3,7 @@ import typescript from 'rollup-plugin-typescript';
 import nodeResolve from 'rollup-plugin-node-resolve';
 
 module.exports = {
-  input: 'src/main.ts',
+  input: 'src/index.ts',
   name: 'polymorph',
   output: {
     file: 'dist/polymorph.js',
