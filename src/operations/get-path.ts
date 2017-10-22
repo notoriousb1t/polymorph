@@ -1,4 +1,4 @@
-const selectorRegex = /^([#|\.]|path)/gmi;
+const selectorRegex = /^([#|\.]|path)/i;
 
 /**
  * Resolves path data and returns it
