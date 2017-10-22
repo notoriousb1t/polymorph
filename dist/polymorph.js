@@ -243,6 +243,7 @@ function fillSegments(larger, smaller) {
         for (var k = 0; k < l.d.length; k += 2) {
             s.d.push(x, y);
         }
+        smaller.push(s);
     }
 }
 function fillPoints(larger, smaller) {
@@ -254,9 +255,12 @@ function fillPoints(larger, smaller) {
     var numberToInsert = numberInLarger - numberInSmaller;
     var dist = numberInLarger / numberToInsert + 1;
     for (var i = 0; i < numberToInsert; i++) {
-        var index = numberInLarger * dist * i * 6 + 2;
+        var index = dist * i * 6 + 2;
         var x = smaller[index - 2];
         var y = smaller[index - 1];
+        if (x !== x || y !== y) {
+            console.log('test', numberInSmaller, numberInLarger, numberToInsert, dist, index);
+        }
         smaller.splice(index, 0, x, y, x, y, x, y);
     }
 }

@@ -54,9 +54,14 @@ function fillPoints(larger: number[], smaller: number[]): void {
     const dist = numberInLarger / numberToInsert + 1
 
     for (let i = 0; i < numberToInsert; i++) {
-        const index = numberInLarger * dist * i * 6 + 2
+        const index = dist * i * 6 + 2
         const x = smaller[index - 2]
         const y = smaller[index - 1]
+
+        if (x !== x || y !== y) {
+          console.log('test', numberInSmaller, numberInLarger, numberToInsert, dist, index)
+        }
+
         smaller.splice(index, 0, x, y, x, y, x, y)
     }
 }
