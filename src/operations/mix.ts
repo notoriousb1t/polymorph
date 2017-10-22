@@ -22,7 +22,7 @@ function mixPointArrays(l: number[][], r: number[][], o: number): number[][] {
     return l.map((a: number[], h: number) => mixPoints(a, r[h], o))
 }
 
-function fillSegments(larger: IPathSegment[], smaller: IPathSegment[]): void {
+export function fillSegments(larger: IPathSegment[], smaller: IPathSegment[]): void {
     if (larger.length < smaller.length) {
         // swap sides so larger is larger (or equal)
         return fillSegments(smaller, larger)
@@ -37,6 +37,7 @@ function fillSegments(larger: IPathSegment[], smaller: IPathSegment[]): void {
         for (let k = 0; k < l.d.length; k += 2) {
             s.d.push(x, y)
         }
+        smaller.push(s)
     }
 }
 
