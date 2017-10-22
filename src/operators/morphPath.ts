@@ -1,22 +1,24 @@
-import { IPathSegment } from '../types'
+import { IPathSegment, IPath } from '../types'
 import { renderPath } from './renderPath'
 import { weighPath } from './weighPath'
 import { reversePath } from './reversePath'
 
+const EPSILON = 2 ** -52;
+
 /**
  * Returns a function to interpolate between the two path shapes.  polymorph.parse() must be called
  * before invoking this function.  In most cases, it is more appropriate to use polymorph.morph() instead of this.
- * @param leftSegments path model to interpolate
- * @param rightSegments path model to interpolate
+ * @param leftPath path model to interpolate
+ * @param rightPath path model to interpolate
  */
-export function morphPath(leftSegments: IPathSegment[], rightSegments: IPathSegment[]): (offset: number) => string {
-    if (leftSegments.length !== rightSegments.length) {
+export function morphPath(leftPath: IPath, rightPath: IPath): (offset: number) => string {
+    if (leftPath.data.length !== rightPath.data.length) {
         // ensure there are an equal amount of segments
-        fillSegments(leftSegments, rightSegments)
+        fillSegments(leftPath.data, rightPath.data)
     }
 
-    const leftSegment = leftSegments.map(selectPath)
-    const rightSegment = rightSegments.map(selectPath)
+    const leftSegment = leftPath.data.map(selectPath)
+    const rightSegment = rightPath.data.map(selectPath)
 
     for (let i = 0; i < leftSegment.length; i++) {
         const left = leftSegment[i]
@@ -32,7 +34,15 @@ export function morphPath(leftSegments: IPathSegment[], rightSegments: IPathSegm
         }
     }
 
-    return (offset: number) => renderPath(mixPointArrays(leftSegment, rightSegment, offset))
+    return (offset: number) => {
+      if (Math.abs(offset - 0) < EPSILON) {
+        return leftPath.path
+      }
+      if (Math.abs(offset - 1) < EPSILON) {
+        return rightPath.path
+      }
+      return renderPath(mixPointArrays(leftSegment, rightSegment, offset))
+    }
 }
 
 function selectPath(s: IPathSegment): number[] {

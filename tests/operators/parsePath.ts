@@ -5,46 +5,46 @@ import { renderPath } from '../../src/operators/renderPath'
 
 describe('parsePath()', () => {
     it('parses terms properly with spaces', () => {
-        assert.deepEqual(parsePath('M 10 42')[0].d, [10, 42])
+        assert.deepEqual(parsePath('M 10 42').data[0].d, [10, 42])
     })
     it('parses terms properly with commas', () => {
-        assert.deepEqual(parsePath('M10,42')[0].d, [10, 42])
+        assert.deepEqual(parsePath('M10,42').data[0].d, [10, 42])
     })
     it('parses move (M | m)', () => {
-        assert.deepEqual(parsePath('M 10 42')[0].d, [10, 42])
+        assert.deepEqual(parsePath('M 10 42').data[0].d, [10, 42])
     })
     it('parses move (Z | z)', () => {
-        assert.deepEqual(parsePath('M 10 42z')[0].d, [10, 42, 10, 42, 10, 42, 10, 42])
+        assert.deepEqual(parsePath('M 10 42z').data[0].d, [10, 42, 10, 42, 10, 42, 10, 42])
     })
     it('parses h', () => {
-        assert.deepEqual(parsePath('M 10 50 h 50')[0].d, [10, 50, 10, 50, 10, 50, 60, 50])
+        assert.deepEqual(parsePath('M 10 50 h 50').data[0].d, [10, 50, 10, 50, 10, 50, 60, 50])
     })
     it('parses H', () => {
-        assert.deepEqual(parsePath('M 10 50 H 60')[0].d, [10, 50, 10, 50, 10, 50, 60, 50])
+        assert.deepEqual(parsePath('M 10 50 H 60').data[0].d, [10, 50, 10, 50, 10, 50, 60, 50])
     })
     it('parses v', () => {
-        assert.deepEqual(parsePath('M 50 10 v 50')[0].d, [50, 10, 50, 10, 50, 10, 50, 60])
+        assert.deepEqual(parsePath('M 50 10 v 50').data[0].d, [50, 10, 50, 10, 50, 10, 50, 60])
     })
     it('parses V', () => {
-        assert.deepEqual(parsePath('M 50 10 V 60')[0].d, [50, 10, 50, 10, 50, 10, 50, 60])
+        assert.deepEqual(parsePath('M 50 10 V 60').data[0].d, [50, 10, 50, 10, 50, 10, 50, 60])
     })
     it('parses l', () => {
-        assert.deepEqual(parsePath('M 10 10 l 10 10')[0].d, [10, 10, 10, 10, 10, 10, 20, 20])
+        assert.deepEqual(parsePath('M 10 10 l 10 10').data[0].d, [10, 10, 10, 10, 10, 10, 20, 20])
     })
     it('parses L', () => {
-        assert.deepEqual(parsePath('M 10 10 L 20 20')[0].d, [10, 10, 10, 10, 10, 10, 20, 20])
+        assert.deepEqual(parsePath('M 10 10 L 20 20').data[0].d, [10, 10, 10, 10, 10, 10, 20, 20])
     })
     it('parses c', () => {
-        assert.deepEqual(parsePath('M 10 10 c 10 5 5 10 25 25')[0].d, [10, 10, 20, 15, 15, 20, 35, 35])
+        assert.deepEqual(parsePath('M 10 10 c 10 5 5 10 25 25').data[0].d, [10, 10, 20, 15, 15, 20, 35, 35])
     })
     it('parses C', () => {
-        assert.deepEqual(parsePath('M 10 10 C 20 15 15 20 35 35')[0].d, [10, 10, 20, 15, 15, 20, 35, 35])
+        assert.deepEqual(parsePath('M 10 10 C 20 15 15 20 35 35').data[0].d, [10, 10, 20, 15, 15, 20, 35, 35])
     })
     it('parses s', () => {
-        assert.deepEqual(parsePath('M 10 10 s 50 35 55 85')[0].d, [10, 10, 10, 10, 60, 45, 65, 95])
+        assert.deepEqual(parsePath('M 10 10 s 50 35 55 85').data[0].d, [10, 10, 10, 10, 60, 45, 65, 95])
     })
     it('parses s + s', () => {
-        const actual = parsePath('M 10 10 s 10 40 25 25 s 10 40 25 25')[0].d
+        const actual = parsePath('M 10 10 s 10 40 25 25 s 10 40 25 25').data[0].d
         assert.deepEqual(actual, [10, 10, 10, 10, 20, 50, 35, 35, 50, 20, 45, 75, 60, 60])
     })
     it('parses s with multiple argument sets', () => {
@@ -54,10 +54,10 @@ describe('parsePath()', () => {
         )
     })
     it('parses S', () => {
-        assert.deepEqual(parsePath('M 10 10 S 20 15 35 35')[0].d, [10, 10, 10, 10, 20, 15, 35, 35])
+        assert.deepEqual(parsePath('M 10 10 S 20 15 35 35').data[0].d, [10, 10, 10, 10, 20, 15, 35, 35])
     })
     it('parses S + S', () => {
-        const actual = parsePath('M 10 10 S 20 50 35 35 S 45 75 60 60')[0].d
+        const actual = parsePath('M 10 10 S 20 50 35 35 S 45 75 60 60').data[0].d
         assert.deepEqual(actual, [10, 10, 10, 10, 20, 50, 35, 35, 50, 20, 45, 75, 60, 60])
     })
     it('parses S with multiple argument sets', () => {
@@ -110,39 +110,47 @@ describe('parsePath()', () => {
     })
 
     it('parsePaths a path and returns bounding information', () => {
+        const original = 'M20,20L-10,80z'
         // prettier-ignore
-        const expected = [
-            {
-                d: [20, 20, 20, 20, 20, 20, -10, 80, -10, 80, -10, 80, 20, 20],
-                x: -10,
-                y: 20,
-                w: 30,
-                h: 60
-            }
+        const expected = {
+        path: original,
+        data: [
+          {
+            d: [20, 20, 20, 20, 20, 20, -10, 80, -10, 80, -10, 80, 20, 20],
+            x: -10,
+            y: 20,
+            w: 30,
+            h: 60
+          }
         ]
-        assert.deepEqual(parsePath('M20,20L-10,80z'), expected)
+      }
+        assert.deepEqual(parsePath(original), expected)
     })
 
     it('parsePaths multi-segment paths', () => {
-        const actual = parsePath('M0,0 V12 H12 V0z M16,16 V20 H20 V16z')
+        const original = 'M0,0 V12 H12 V0z M16,16 V20 H20 V16z'
+        const actual = parsePath(original)
         // prettier-ignore
-        const expected = [
-        {
-          d: [0, 0, 0, 0, 0, 0, 0, 12, 0, 12, 0, 12, 12, 12, 12, 12, 12, 12, 12, 0, 12, 0, 12, 0, 0, 0],
-          x: 0,
-          y: 0,
-          w: 12,
-          h: 12
-        },
-        {
+        const expected = {
+          path: original,
+          data: [
+            {
+              d: [0, 0, 0, 0, 0, 0, 0, 12, 0, 12, 0, 12, 12, 12, 12, 12, 12, 12, 12, 0, 12, 0, 12, 0, 0, 0],
+              x: 0,
+              y: 0,
+              w: 12,
+              h: 12
+            },
+            {
 
-          d: [16, 16, 16, 16, 16, 16, 16, 20, 16, 20, 16, 20, 20, 20, 20, 20, 20, 20, 20, 16, 20, 16, 20, 16, 16, 16],
-          x: 16,
-          y: 16,
-          w: 4,
-          h: 4
-        }
-      ];
+              d: [16, 16, 16, 16, 16, 16, 16, 20, 16, 20, 16, 20, 20, 20, 20, 20, 20, 20, 20, 16, 20, 16, 20, 16, 16, 16],
+              x: 16,
+              y: 16,
+              w: 4,
+              h: 4
+            }
+          ]
+        };
         assert.deepEqual(actual, expected)
     })
 })

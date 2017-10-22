@@ -19,16 +19,16 @@ describe('fillSegments()', () => {
     const left = parsePath('M0,0 V12 H12 V0z M16,16 V20 H20 V16z');
     const right = parsePath('M0,0 V12 H12 V0z');
 
-    fillSegments(left, right);
+    fillSegments(left.data, right.data);
 
-    assert.equal(left.length, right.length);
+    assert.equal(left.data.length, right.data.length);
   })
   it('fills segments from the left', () => {
     const right = parsePath('M0,0 V12 H12 V0z M16,16 V20 H20 V16z');
     const left = parsePath('M0,0 V12 H12 V0z');
 
-    fillSegments(left, right);
+    fillSegments(left.data, right.data);
 
-    assert.equal(left.length, right.length);
+    assert.equal(left.data.length, right.data.length);
   })
 })

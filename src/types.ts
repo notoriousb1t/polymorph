@@ -1,3 +1,8 @@
+export interface IPath {
+  path: string
+  data: IPathSegment[]
+}
+
 /**
  * Internal representation of Path data
  */

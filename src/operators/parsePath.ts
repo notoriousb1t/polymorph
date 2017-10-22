@@ -1,5 +1,5 @@
-import { IPathSegment } from '../types';
-import { parsePoints } from './parsePoints';
+import { IPathSegment, IPath } from '../types'
+import { parsePoints } from './parsePoints'
 
 function createPathSegmentArray(points: number[]): IPathSegment {
     let xmin: number, xmax: number, ymin: number, ymax: number
@@ -27,7 +27,9 @@ function createPathSegmentArray(points: number[]): IPathSegment {
     }
 }
 
-
-export function parsePath(d: string): IPathSegment[] {
-    return parsePoints(d).map(createPathSegmentArray)
+export function parsePath(d: string): IPath {
+    return {
+        path: d,
+        data: parsePoints(d).map(createPathSegmentArray)
+    }
 }

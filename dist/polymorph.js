@@ -57,12 +57,13 @@ function reversePath(s) {
     return d;
 }
 
-function morphPath(leftSegments, rightSegments) {
-    if (leftSegments.length !== rightSegments.length) {
-        fillSegments(leftSegments, rightSegments);
+var EPSILON = Math.pow(2, -52);
+function morphPath(leftPath, rightPath) {
+    if (leftPath.data.length !== rightPath.data.length) {
+        fillSegments(leftPath.data, rightPath.data);
     }
-    var leftSegment = leftSegments.map(selectPath);
-    var rightSegment = rightSegments.map(selectPath);
+    var leftSegment = leftPath.data.map(selectPath);
+    var rightSegment = rightPath.data.map(selectPath);
     for (var i = 0; i < leftSegment.length; i++) {
         var left = leftSegment[i];
         var right = rightSegment[i];
@@ -72,7 +73,15 @@ function morphPath(leftSegments, rightSegments) {
             rightSegment[i] = rightReversed;
         }
     }
-    return function (offset) { return renderPath(mixPointArrays(leftSegment, rightSegment, offset)); };
+    return function (offset) {
+        if (Math.abs(offset - 0) < EPSILON) {
+            return leftPath.path;
+        }
+        if (Math.abs(offset - 1) < EPSILON) {
+            return rightPath.path;
+        }
+        return renderPath(mixPointArrays(leftSegment, rightSegment, offset));
+    };
 }
 function selectPath(s) {
     return s.d;
@@ -288,10 +297,7 @@ function parsePoints(d) {
             k += maxLength;
         } while (k < t2.length);
     }
-    return ctx.s.sort(sizeDescending);
-}
-function sizeDescending(a, b) {
-    return b.length - a.length;
+    return ctx.s;
 }
 
 function createPathSegmentArray(points) {
@@ -315,7 +321,10 @@ function createPathSegmentArray(points) {
     };
 }
 function parsePath(d) {
-    return parsePoints(d).map(createPathSegmentArray);
+    return {
+        path: d,
+        data: parsePoints(d).map(createPathSegmentArray)
+    };
 }
 
 function parse(d) {

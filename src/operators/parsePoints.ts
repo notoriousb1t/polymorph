@@ -260,9 +260,5 @@ export function parsePoints(d: string): number[][] {
 
     // return segments with the largest sub-paths first
     // this makes it more likely that holes will be filled
-    return ctx.s.sort(sizeDescending)
-}
-
-function sizeDescending(a: number[], b: number[]): number {
-    return b.length - a.length
+    return ctx.s
 }
