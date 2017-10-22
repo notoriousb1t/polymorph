@@ -126,7 +126,55 @@ function addCurve(ctx, x1, y1, x2, y2, dx, dy) {
     ctx.y = dy;
     ctx.lc = ctx.c;
 }
-function parsePath(d) {
+function createPathSegmentArray(points) {
+    var xmin, xmax, ymin, ymax;
+    xmin = xmax = points[0];
+    ymin = ymax = points[1];
+    for (var i = 2; i < points.length; i += 6) {
+        var x = points[i + 4];
+        var y = points[i + 5];
+        xmin = Math.min(xmin, x);
+        xmax = Math.max(xmax, x);
+        ymin = Math.min(ymin, y);
+        ymax = Math.max(ymax, y);
+    }
+    return {
+        d: points,
+        x: xmin,
+        y: ymin,
+        w: xmax - xmin,
+        h: ymax - ymin
+    };
+}
+function convertToAbsolute(ctx) {
+    if (ctx.c === V) {
+        ctx.t[0] += ctx.y;
+    }
+    else if (ctx.c === H) {
+        ctx.t[0] += ctx.x;
+    }
+    else {
+        for (var j = 0; j < ctx.t.length; j += 2) {
+            ctx.t[j] += ctx.x;
+            ctx.t[j + 1] += ctx.y;
+        }
+    }
+}
+function parseSegments(d) {
+    return d
+        .replace(/[\^\s]?([mhvlzcsqta]|\-?\d*\.?\d+)[,\$\s]?/gi, ' $1')
+        .replace(/([mhvlzcsqta])/gi, ' $1')
+        .trim()
+        .split('  ')
+        .map(parseSegment);
+}
+function parseSegment(s2) {
+    return s2.split(' ').map(parseCommand);
+}
+function parseCommand(str, i) {
+    return i === 0 ? str : +str;
+}
+function parsePoints(d) {
     var ctx = {
         x: 0,
         y: 0,
@@ -163,57 +211,12 @@ function parsePath(d) {
     }
     return ctx.s;
 }
-function convertToAbsolute(ctx) {
-    if (ctx.c === V) {
-        ctx.t[0] += ctx.y;
-    }
-    else if (ctx.c === H) {
-        ctx.t[0] += ctx.x;
-    }
-    else {
-        for (var j = 0; j < ctx.t.length; j += 2) {
-            ctx.t[j] += ctx.x;
-            ctx.t[j + 1] += ctx.y;
-        }
-    }
-}
-function parseSegments(d) {
-    return d
-        .replace(/[\^\s]?([mhvlzcsqta]|\-?\d*\.?\d+)[,\$\s]?/gi, ' $1')
-        .replace(/([mhvlzcsqta])/gi, ' $1')
-        .trim()
-        .split('  ')
-        .map(parseSegment);
-}
-function parseSegment(s2) {
-    return s2.split(' ').map(parseCommand);
-}
-function parseCommand(str, i) {
-    return i === 0 ? str : +str;
+function parsePath(d) {
+    return parsePoints(d).map(createPathSegmentArray);
 }
 
 function parse(d) {
-    return parsePath(getPath(d)).map(createPathSegmentArray);
-}
-function createPathSegmentArray(points) {
-    var xmin, xmax, ymin, ymax;
-    xmin = xmax = points[0];
-    ymin = ymax = points[1];
-    for (var i = 2; i < points.length; i += 6) {
-        var x = points[i + 4];
-        var y = points[i + 5];
-        xmin = Math.min(xmin, x);
-        xmax = Math.max(xmax, x);
-        ymin = Math.min(ymin, y);
-        ymax = Math.max(ymax, y);
-    }
-    return {
-        d: points,
-        x: xmin,
-        y: ymin,
-        w: xmax - xmin,
-        h: ymax - ymin
-    };
+    return parsePath(getPath(d));
 }
 
 function renderPath(ns) {
@@ -231,7 +234,7 @@ function formatNumber(n) {
     return (Math.round(n * 100) / 100).toString();
 }
 
-function mix(leftSegments, rightSegments) {
+function morphPath(leftSegments, rightSegments) {
     if (leftSegments.length !== rightSegments.length) {
         fillSegments(leftSegments, rightSegments);
     }
@@ -290,17 +293,32 @@ function mixPoints(a, b, o) {
 }
 
 function morph(left, right) {
-    return mix(parse(left), parse(right));
+    return morphPath(parse(left), parse(right));
 }
 
 function toBezier(d) {
-    return renderPath(parsePath(d));
+    return renderPath(parsePoints(getPath(d)));
+}
+
+function reversePath(s) {
+    var d = s.slice(-2);
+    for (var i = s.length - 3; i > -1; i -= 6) {
+        d.push(s[i - 1], s[i], s[i - 3], s[i - 2], s[i - 5], s[i - 4]);
+    }
+    return d;
+}
+
+function reverse(path) {
+    return renderPath(parsePoints(getPath(path))
+        .map(reversePath)
+        .reverse());
 }
 
 exports.getPath = getPath;
 exports.parse = parse;
 exports.morph = morph;
 exports.toBezier = toBezier;
+exports.reverse = reverse;
 
 return exports;
 

@@ -7,7 +7,7 @@ import { renderPath } from './render-path'
  * @param leftSegments path model to interpolate
  * @param rightSegments path model to interpolate
  */
-export function mix(leftSegments: IPathSegment[], rightSegments: IPathSegment[]): (offset: number) => string {
+export function morphPath(leftSegments: IPathSegment[], rightSegments: IPathSegment[]): (offset: number) => string {
     if (leftSegments.length !== rightSegments.length) {
         // ensure there are an equal amount of segments
         fillSegments(leftSegments, rightSegments)

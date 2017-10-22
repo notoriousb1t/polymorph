@@ -1,5 +1,5 @@
-import { renderPath } from './render-path';
-import { parsePath } from './parse-path';
+import { renderPath } from './operators/render-path';
+import { parsePoints } from './operators/parse-path';
 import { getPath } from './get-path';
 
 /**
@@ -7,5 +7,5 @@ import { getPath } from './get-path';
  * @param d path data, CSS selector, or path element
  */
 export function toBezier(d: string): string {
-  return renderPath(parsePath(getPath(d)));
+  return renderPath(parsePoints(getPath(d)));
 }

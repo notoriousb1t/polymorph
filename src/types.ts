@@ -23,3 +23,7 @@ export interface IPathSegment {
    */
   y: number;
 }
+
+export interface IPathElement {
+  tagName: 'PATH'
+}

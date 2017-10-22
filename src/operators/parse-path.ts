@@ -1,5 +1,6 @@
 import { _, Z, T, Q, S, C, V, H } from '../constants'
 import { coalesce } from '../utilities/coalesce'
+import { IPathSegment } from '../types'
 
 // describes the number of arguments each command has
 const argLengths = { M: 2, H: 1, V: 1, L: 2, Z: 0, C: 6, S: 4, Q: 4, T: 2 }
@@ -200,11 +201,79 @@ function addCurve(
     ctx.lc = ctx.c
 }
 
+function createPathSegmentArray(points: number[]): IPathSegment {
+    let xmin: number, xmax: number, ymin: number, ymax: number
+
+    // get initial x,y from move command
+    xmin = xmax = points[0]
+    ymin = ymax = points[1]
+
+    for (let i = 2; i < points.length; i += 6) {
+        let x = points[i + 4]
+        let y = points[i + 5]
+
+        xmin = Math.min(xmin, x)
+        xmax = Math.max(xmax, x)
+        ymin = Math.min(ymin, y)
+        ymax = Math.max(ymax, y)
+    }
+
+    return {
+        d: points,
+        x: xmin,
+        y: ymin,
+        w: xmax - xmin,
+        h: ymax - ymin
+    }
+}
+
+/**
+ * Converts the current terms in the context to absolute position based on the
+ * current cursor position
+ * @param ctx Parser context
+ */
+function convertToAbsolute(ctx: IParseContext): void {
+    if (ctx.c === V) {
+        ctx.t[0] += ctx.y
+    } else if (ctx.c === H) {
+        ctx.t[0] += ctx.x
+    } else {
+        for (let j = 0; j < ctx.t.length; j += 2) {
+            ctx.t[j] += ctx.x
+            ctx.t[j + 1] += ctx.y
+        }
+    }
+}
+
+function parseSegments(d: string): (string | number)[][] {
+    // replace all terms with space + term to remove garbage
+    // replace command letters with an additional space
+    // remove spaces around
+    // split on double-space (splits on command segment)
+    // parse each segment into an of list of command + args
+    return d
+        .replace(/[\^\s]?([mhvlzcsqta]|\-?\d*\.?\d+)[,\$\s]?/gi, ' $1')
+        .replace(/([mhvlzcsqta])/gi, ' $1')
+        .trim()
+        .split('  ')
+        .map(parseSegment)
+}
+
+function parseSegment(s2: string): (string | number)[] {
+    // split command segment into command + args
+    return s2.split(' ').map(parseCommand)
+}
+
+function parseCommand(str: string, i: number): string | number {
+    // convert all terms except command into a number
+    return i === 0 ? str : +str
+}
+
 /**
  * Returns an [] with cursor position + polybezier [mx, my, ...[x1, y1, x2, y2, dx, dy] ]
  * @param d string to parse
  */
-export function parsePath(d: string): number[][] {
+export function parsePoints(d: string): number[][] {
     // create parser context
     const ctx: IParseContext = {
         x: 0,
@@ -261,44 +330,6 @@ export function parsePath(d: string): number[][] {
     return ctx.s
 }
 
-/**
- * Converts the current terms in the context to absolute position based on the
- * current cursor position
- * @param ctx Parser context
- */
-function convertToAbsolute(ctx: IParseContext): void {
-    if (ctx.c === V) {
-        ctx.t[0] += ctx.y
-    } else if (ctx.c === H) {
-        ctx.t[0] += ctx.x
-    } else {
-        for (let j = 0; j < ctx.t.length; j += 2) {
-            ctx.t[j] += ctx.x
-            ctx.t[j + 1] += ctx.y
-        }
-    }
-}
-
-function parseSegments(d: string): (string | number)[][] {
-    // replace all terms with space + term to remove garbage
-    // replace command letters with an additional space
-    // remove spaces around
-    // split on double-space (splits on command segment)
-    // parse each segment into an of list of command + args
-    return d
-        .replace(/[\^\s]?([mhvlzcsqta]|\-?\d*\.?\d+)[,\$\s]?/gi, ' $1')
-        .replace(/([mhvlzcsqta])/gi, ' $1')
-        .trim()
-        .split('  ')
-        .map(parseSegment)
-}
-
-function parseSegment(s2: string): (string | number)[] {
-    // split command segment into command + args
-    return s2.split(' ').map(parseCommand)
-}
-
-function parseCommand(str: string, i: number): string | number {
-    // convert all terms except command into a number
-    return i === 0 ? str : +str
+export function parsePath(d: string): IPathSegment[] {
+    return parsePoints(d).map(createPathSegmentArray)
 }
