@@ -1,3 +1,6 @@
+/**
+ * Internal representation of Path data
+ */
 export interface IPathSegment {
   /**
    * Path data

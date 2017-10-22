@@ -1,7 +1,7 @@
 var polymorph = (function (exports) {
 'use strict';
 
-var selectorRegex = /^([#|\.]|path)/gmi;
+var selectorRegex = /^([#|\.]|path)/i;
 function getPath(selector) {
     if (isString(selector)) {
         if (!selectorRegex.test(selector)) {

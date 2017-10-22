@@ -1,6 +1,14 @@
-import { mix } from './mix';
-import { parse } from './parse';
+import { mix } from './mix'
+import { parse } from './parse'
 
-export function morph(left: string, right: string): (offset: number) => string {
-  return mix(parse(left), parse(right))
+/**
+ * Returns a function to interpolate between the two path shapes.
+ * @param left path data, CSS selector, or path element
+ * @param right path data, CSS selector, or path element
+ */
+export function morph(
+    left: string | { tagName: string },
+    right: string | { tagName: string }
+): (offset: number) => string {
+    return mix(parse(left), parse(right))
 }

@@ -1,6 +1,12 @@
 import { IPathSegment } from '../types'
 import { renderPath } from './render-path'
 
+/**
+ * Returns a function to interpolate between the two path shapes.  polymorph.parse() must be called
+ * before invoking this function.  In most cases, it is more appropriate to use polymorph.morph() instead of this.
+ * @param leftSegments path model to interpolate
+ * @param rightSegments path model to interpolate
+ */
 export function mix(leftSegments: IPathSegment[], rightSegments: IPathSegment[]): (offset: number) => string {
     if (leftSegments.length !== rightSegments.length) {
         // ensure there are an equal amount of segments

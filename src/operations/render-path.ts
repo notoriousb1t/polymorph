@@ -1,6 +1,9 @@
 import { M, C } from '../constants'
 
-
+/**
+ * Converts poly-bezier data back to SVG Path data.
+ * @param ns poly-bezier data
+ */
 export function renderPath(ns: number[][]): string {
     const parts: string[] = []
     for (let i = 0; i < ns.length; i++) {
