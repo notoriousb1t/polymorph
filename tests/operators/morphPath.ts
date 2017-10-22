@@ -1,6 +1,6 @@
 import { assert } from 'chai'
-import { mixPoints, fillSegments } from '../../src/operators/morph-path'
-import { parsePath } from '../../src/operators/parse-path';
+import { mixPoints, fillSegments } from '../../src/operators/morphPath'
+import { parsePath } from '../../src/operators/parsePath';
 
 describe('mixPoints()', () => {
     it('finds the midpoint when .25 is provided', () => {

@@ -1,6 +1,6 @@
+import { parsePath } from './operators/parsePath'
+import { getPath } from './getPath';
 import { IPathSegment, IPathElement } from './types'
-import { parsePath } from './operators/parse-path'
-import { getPath } from './get-path';
 
 /**
  * Parses the path data and returns a model describing it

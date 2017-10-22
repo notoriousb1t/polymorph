@@ -1,51 +1,9 @@
 import { _, Z, T, Q, S, C, V, H } from '../constants'
 import { coalesce } from '../utilities/coalesce'
-import { IPathSegment } from '../types'
+import { IParseContext } from '../types'
 
 // describes the number of arguments each command has
 const argLengths = { M: 2, H: 1, V: 1, L: 2, Z: 0, C: 6, S: 4, Q: 4, T: 2 }
-
-/**
- * Used in this file to keep track of the current state of the parser.
- */
-interface IParseContext {
-    /**
-     * Cursor X position
-     */
-    x: number
-    /**
-     * Cursor Y position
-     */
-    y: number
-    /**
-     * Last Control X
-     */
-    cx: number
-    /**
-     * Last Control Y
-     */
-    cy: number
-    /**
-     * Last command that was seen
-     */
-    lc: string
-    /**
-     * Current command being parsed
-     */
-    c: string
-    /**
-     * Terms being parsed
-     */
-    t: number[]
-    /**
-     * All segments
-     */
-    s: number[][]
-    /**
-     * Current poly-bezier. (The one being bult)
-     */
-    p: number[]
-}
 
 /**
  * Ratio from the control point in a quad to a cubic bezier control points
@@ -201,32 +159,6 @@ function addCurve(
     ctx.lc = ctx.c
 }
 
-function createPathSegmentArray(points: number[]): IPathSegment {
-    let xmin: number, xmax: number, ymin: number, ymax: number
-
-    // get initial x,y from move command
-    xmin = xmax = points[0]
-    ymin = ymax = points[1]
-
-    for (let i = 2; i < points.length; i += 6) {
-        let x = points[i + 4]
-        let y = points[i + 5]
-
-        xmin = Math.min(xmin, x)
-        xmax = Math.max(xmax, x)
-        ymin = Math.min(ymin, y)
-        ymax = Math.max(ymax, y)
-    }
-
-    return {
-        d: points,
-        x: xmin,
-        y: ymin,
-        w: xmax - xmin,
-        h: ymax - ymin
-    }
-}
-
 /**
  * Converts the current terms in the context to absolute position based on the
  * current cursor position
@@ -326,10 +258,11 @@ export function parsePoints(d: string): number[][] {
         } while (k < t2.length)
     }
 
-    // return points
-    return ctx.s
+    // return segments with the largest sub-paths first
+    // this makes it more likely that holes will be filled
+    return ctx.s.sort(sizeDescending)
 }
 
-export function parsePath(d: string): IPathSegment[] {
-    return parsePoints(d).map(createPathSegmentArray)
+function sizeDescending(a: number[], b: number[]): number {
+    return b.length - a.length
 }

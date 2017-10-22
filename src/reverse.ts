@@ -1,8 +1,8 @@
+import { renderPath } from './operators/renderPath'
+import { parsePoints } from './operators/parsePoints'
+import { reversePath } from './operators/reversePath'
 import { IPathElement } from './types'
-import { renderPath } from './operators/render-path'
-import { parsePoints } from './operators/parse-path'
-import { getPath } from './get-path'
-import { reversePath } from './operators/reverse-path'
+import { getPath } from './getPath'
 
 export function reverse(path: string | IPathElement): string {
     return renderPath(

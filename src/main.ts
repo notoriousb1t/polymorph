@@ -1,5 +1,7 @@
-export { getPath } from './get-path';
-export { parse } from './parse';
+export * from './types'
+
+export { getPath } from './getPath';
 export { morph } from './morph';
-export { toBezier } from './to-bezier';
+export { parse } from './parse';
+export { toBezier } from './toBezier';
 export { reverse } from './reverse';

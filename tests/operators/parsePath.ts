@@ -1,6 +1,7 @@
 import { assert } from 'chai'
-import { parsePath, parsePoints } from '../../src/operators/parse-path'
-import { renderPath } from '../../src/operators/render-path'
+import { parsePath } from '../../src/operators/parsePath'
+import { parsePoints } from '../../src/operators/parsePoints'
+import { renderPath } from '../../src/operators/renderPath'
 
 describe('parsePath()', () => {
     it('parses terms properly with spaces', () => {

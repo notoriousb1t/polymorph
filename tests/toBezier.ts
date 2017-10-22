@@ -1,5 +1,5 @@
 import { assert } from 'chai'
-import { toBezier } from '../src/to-bezier'
+import { toBezier } from '../src/toBezier'
 
 describe('toBezier()', () => {
   it('converts an absolute cubic bezier to itself', () => {

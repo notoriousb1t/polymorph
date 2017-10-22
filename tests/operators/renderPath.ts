@@ -1,5 +1,5 @@
 import { assert } from 'chai'
-import { renderPath } from '../../src/operators/render-path'
+import { renderPath } from '../../src/operators/renderPath'
 
 describe('renderPath()', () => {
   it('renders a segment properly', () => {

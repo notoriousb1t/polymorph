@@ -25,6 +25,105 @@ var S = 'S';
 var Q = 'Q';
 var T = 'T';
 
+function renderPath(ns) {
+    var parts = [];
+    for (var i = 0; i < ns.length; i++) {
+        var n = ns[i];
+        parts.push(M, formatNumber(n[0]), formatNumber(n[1]), C);
+        for (var f = 2; f < n.length; f++) {
+            parts.push(formatNumber(n[f]));
+        }
+    }
+    return parts.join(' ');
+}
+function formatNumber(n) {
+    return (Math.round(n * 100) / 100).toString();
+}
+
+function weighPath(left, right) {
+    var sum = 0;
+    for (var i = 0; i < left.length; i++) {
+        var distance = Math.abs(left[i] - right[i]);
+        sum += distance * distance;
+    }
+    return sum;
+}
+
+function reversePath(s) {
+    var d = s.slice(-2);
+    for (var i = s.length - 3; i > -1; i -= 6) {
+        d.push(s[i - 1], s[i], s[i - 3], s[i - 2], s[i - 5], s[i - 4]);
+    }
+    return d;
+}
+
+function morphPath(leftSegments, rightSegments) {
+    if (leftSegments.length !== rightSegments.length) {
+        fillSegments(leftSegments, rightSegments);
+    }
+    var leftSegment = leftSegments.map(selectPath);
+    var rightSegment = rightSegments.map(selectPath);
+    for (var i = 0; i < leftSegment.length; i++) {
+        var left = leftSegment[i];
+        var right = rightSegment[i];
+        fillPoints(left, right);
+        var rightReversed = reversePath(right);
+        if (weighPath(left, right) > weighPath(left, rightReversed)) {
+            rightSegment[i] = rightReversed;
+        }
+    }
+    return function (offset) { return renderPath(mixPointArrays(leftSegment, rightSegment, offset)); };
+}
+function selectPath(s) {
+    return s.d;
+}
+function mixPointArrays(l, r, o) {
+    return l.map(function (a, h) { return mixPoints(a, r[h], o); });
+}
+function fillSegments(larger, smaller) {
+    if (larger.length < smaller.length) {
+        return fillSegments(smaller, larger);
+    }
+    for (var i = smaller.length; i < larger.length; i++) {
+        var l = larger[i];
+        var x = l.w / 2 + l.x;
+        var y = l.h / 2 + l.y;
+        var s = { d: [], x: l.x, y: l.y, h: l.h, w: l.w };
+        for (var k = 0; k < l.d.length; k += 2) {
+            s.d.push(x, y);
+        }
+        smaller.push(s);
+    }
+}
+function fillPoints(larger, smaller) {
+    if (larger.length < smaller.length) {
+        return fillPoints(smaller, larger);
+    }
+    var numberInSmaller = (smaller.length - 2) / 6;
+    var numberInLarger = (larger.length - 2) / 6;
+    var numberToInsert = numberInLarger - numberInSmaller;
+    if (numberToInsert === 0) {
+        return;
+    }
+    var dist = numberToInsert / numberInLarger;
+    for (var i = 0; i < numberToInsert; i++) {
+        var index = Math.min(Math.floor(dist * i * 6) + 2, smaller.length);
+        var x = smaller[index - 2];
+        var y = smaller[index - 1];
+        if (x !== x || y !== y) {
+            console.log('test', numberInSmaller, numberInLarger, numberToInsert, dist, index);
+        }
+        smaller.splice(index, 0, x, y, x, y, x, y);
+    }
+}
+function mixPoints(a, b, o) {
+    var results = [];
+    for (var i = 0; i < a.length; i++) {
+        results.push(a[i] + (b[i] - a[i]) * o);
+    }
+    return results;
+}
+
 function coalesce(current, fallback) {
     return current === _ ? fallback : current;
 }
@@ -126,26 +225,6 @@ function addCurve(ctx, x1, y1, x2, y2, dx, dy) {
     ctx.y = dy;
     ctx.lc = ctx.c;
 }
-function createPathSegmentArray(points) {
-    var xmin, xmax, ymin, ymax;
-    xmin = xmax = points[0];
-    ymin = ymax = points[1];
-    for (var i = 2; i < points.length; i += 6) {
-        var x = points[i + 4];
-        var y = points[i + 5];
-        xmin = Math.min(xmin, x);
-        xmax = Math.max(xmax, x);
-        ymin = Math.min(ymin, y);
-        ymax = Math.max(ymax, y);
-    }
-    return {
-        d: points,
-        x: xmin,
-        y: ymin,
-        w: xmax - xmin,
-        h: ymax - ymin
-    };
-}
 function convertToAbsolute(ctx) {
     if (ctx.c === V) {
         ctx.t[0] += ctx.y;
@@ -209,7 +288,31 @@ function parsePoints(d) {
             k += maxLength;
         } while (k < t2.length);
     }
-    return ctx.s;
+    return ctx.s.sort(sizeDescending);
+}
+function sizeDescending(a, b) {
+    return b.length - a.length;
+}
+
+function createPathSegmentArray(points) {
+    var xmin, xmax, ymin, ymax;
+    xmin = xmax = points[0];
+    ymin = ymax = points[1];
+    for (var i = 2; i < points.length; i += 6) {
+        var x = points[i + 4];
+        var y = points[i + 5];
+        xmin = Math.min(xmin, x);
+        xmax = Math.max(xmax, x);
+        ymin = Math.min(ymin, y);
+        ymax = Math.max(ymax, y);
+    }
+    return {
+        d: points,
+        x: xmin,
+        y: ymin,
+        w: xmax - xmin,
+        h: ymax - ymin
+    };
 }
 function parsePath(d) {
     return parsePoints(d).map(createPathSegmentArray);
@@ -217,79 +320,6 @@ function parsePath(d) {
 
 function parse(d) {
     return parsePath(getPath(d));
-}
-
-function renderPath(ns) {
-    var parts = [];
-    for (var i = 0; i < ns.length; i++) {
-        var n = ns[i];
-        parts.push(M, formatNumber(n[0]), formatNumber(n[1]), C);
-        for (var f = 2; f < n.length; f++) {
-            parts.push(formatNumber(n[f]));
-        }
-    }
-    return parts.join(' ');
-}
-function formatNumber(n) {
-    return (Math.round(n * 100) / 100).toString();
-}
-
-function morphPath(leftSegments, rightSegments) {
-    if (leftSegments.length !== rightSegments.length) {
-        fillSegments(leftSegments, rightSegments);
-    }
-    var leftSegment = leftSegments.map(function (s) { return s.d; });
-    var rightSegment = rightSegments.map(function (s) { return s.d; });
-    for (var i = 0; i < leftSegment.length; i++) {
-        fillPoints(leftSegment[i], rightSegment[i]);
-    }
-    return function (offset) { return renderPath(mixPointArrays(leftSegment, rightSegment, offset)); };
-}
-function mixPointArrays(l, r, o) {
-    return l.map(function (a, h) { return mixPoints(a, r[h], o); });
-}
-function fillSegments(larger, smaller) {
-    if (larger.length < smaller.length) {
-        return fillSegments(smaller, larger);
-    }
-    for (var i = smaller.length; i < larger.length; i++) {
-        var l = larger[i];
-        var x = l.w / 2 + l.x;
-        var y = l.h / 2 + l.y;
-        var s = { d: [], x: l.x, y: l.y, h: l.h, w: l.w };
-        for (var k = 0; k < l.d.length; k += 2) {
-            s.d.push(x, y);
-        }
-        smaller.push(s);
-    }
-}
-function fillPoints(larger, smaller) {
-    if (larger.length < smaller.length) {
-        return fillPoints(smaller, larger);
-    }
-    var numberInSmaller = (smaller.length - 2) / 6;
-    var numberInLarger = (larger.length - 2) / 6;
-    var numberToInsert = numberInLarger - numberInSmaller;
-    if (numberToInsert === 0) {
-        return;
-    }
-    var dist = numberToInsert / numberInLarger;
-    for (var i = 0; i < numberToInsert; i++) {
-        var index = Math.min(Math.floor(dist * i * 6) + 2, smaller.length);
-        var x = smaller[index - 2];
-        var y = smaller[index - 1];
-        if (x !== x || y !== y) {
-            console.log('test', numberInSmaller, numberInLarger, numberToInsert, dist, index);
-        }
-        smaller.splice(index, 0, x, y, x, y, x, y);
-    }
-}
-function mixPoints(a, b, o) {
-    var results = [];
-    for (var i = 0; i < a.length; i++) {
-        results.push(a[i] + (b[i] - a[i]) * o);
-    }
-    return results;
 }
 
 function morph(left, right) {
@@ -300,14 +330,6 @@ function toBezier(d) {
     return renderPath(parsePoints(getPath(d)));
 }
 
-function reversePath(s) {
-    var d = s.slice(-2);
-    for (var i = s.length - 3; i > -1; i -= 6) {
-        d.push(s[i - 1], s[i], s[i - 3], s[i - 2], s[i - 5], s[i - 4]);
-    }
-    return d;
-}
-
 function reverse(path) {
     return renderPath(parsePoints(getPath(path))
         .map(reversePath)
@@ -315,8 +337,8 @@ function reverse(path) {
 }
 
 exports.getPath = getPath;
-exports.parse = parse;
 exports.morph = morph;
+exports.parse = parse;
 exports.toBezier = toBezier;
 exports.reverse = reverse;
 

@@ -27,3 +27,46 @@ export interface IPathSegment {
 export interface IPathElement {
   tagName: 'PATH'
 }
+
+
+/**
+ * Used to keep track of the current state of the path/point parser
+ */
+export interface IParseContext {
+  /**
+   * Cursor X position
+   */
+  x: number
+  /**
+   * Cursor Y position
+   */
+  y: number
+  /**
+   * Last Control X
+   */
+  cx: number
+  /**
+   * Last Control Y
+   */
+  cy: number
+  /**
+   * Last command that was seen
+   */
+  lc: string
+  /**
+   * Current command being parsed
+   */
+  c: string
+  /**
+   * Terms being parsed
+   */
+  t: number[]
+  /**
+   * All segments
+   */
+  s: number[][]
+  /**
+   * Current poly-bezier. (The one being bult)
+   */
+  p: number[]
+}

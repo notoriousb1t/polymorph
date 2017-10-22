@@ -1,4 +1,4 @@
-import { morphPath } from './operators/morph-path'
+import { morphPath } from './operators/morphPath'
 import { parse } from './parse'
 import { IPathElement } from './types'
 

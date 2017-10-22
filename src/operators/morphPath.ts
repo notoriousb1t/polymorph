@@ -1,5 +1,7 @@
 import { IPathSegment } from '../types'
-import { renderPath } from './render-path'
+import { renderPath } from './renderPath'
+import { weighPath } from './weighPath'
+import { reversePath } from './reversePath'
 
 /**
  * Returns a function to interpolate between the two path shapes.  polymorph.parse() must be called
@@ -13,15 +15,28 @@ export function morphPath(leftSegments: IPathSegment[], rightSegments: IPathSegm
         fillSegments(leftSegments, rightSegments)
     }
 
-    const leftSegment = leftSegments.map((s: IPathSegment) => s.d)
-    const rightSegment = rightSegments.map((s: IPathSegment) => s.d)
+    const leftSegment = leftSegments.map(selectPath)
+    const rightSegment = rightSegments.map(selectPath)
 
     for (let i = 0; i < leftSegment.length; i++) {
+        const left = leftSegment[i]
+        const right = rightSegment[i]
         // ensure points in segments are equal length
-        fillPoints(leftSegment[i], rightSegment[i])
+        fillPoints(left, right)
+
+        // weigh paths and use reversed right if necessary
+        // this is meant to minimize distance between points as a whole
+        const rightReversed = reversePath(right)
+        if (weighPath(left, right) > weighPath(left, rightReversed)) {
+            rightSegment[i] = rightReversed
+        }
     }
 
     return (offset: number) => renderPath(mixPointArrays(leftSegment, rightSegment, offset))
+}
+
+function selectPath(s: IPathSegment): number[] {
+  return s.d
 }
 
 function mixPointArrays(l: number[][], r: number[][], o: number): number[][] {
