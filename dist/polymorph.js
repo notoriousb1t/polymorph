@@ -253,9 +253,12 @@ function fillPoints(larger, smaller) {
     var numberInSmaller = (smaller.length - 2) / 6;
     var numberInLarger = (larger.length - 2) / 6;
     var numberToInsert = numberInLarger - numberInSmaller;
-    var dist = numberInLarger / numberToInsert + 1;
+    if (numberToInsert === 0) {
+        return;
+    }
+    var dist = numberToInsert / numberInLarger;
     for (var i = 0; i < numberToInsert; i++) {
-        var index = dist * i * 6 + 2;
+        var index = Math.min(Math.floor(dist * i * 6) + 2, smaller.length);
         var x = smaller[index - 2];
         var y = smaller[index - 1];
         if (x !== x || y !== y) {

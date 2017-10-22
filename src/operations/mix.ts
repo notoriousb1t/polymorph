@@ -15,7 +15,10 @@ export function mix(leftSegments: IPathSegment[], rightSegments: IPathSegment[])
         fillPoints(leftSegment[i], rightSegment[i])
     }
 
-    return (offset: number) => renderPath(mixPointArrays(leftSegment, rightSegment, offset))
+    return (offset: number) =>
+        renderPath(
+            offset === 0 ? leftSegment : offset === 1 ? rightSegment : mixPointArrays(leftSegment, rightSegment, offset)
+        )
 }
 
 function mixPointArrays(l: number[][], r: number[][], o: number): number[][] {
@@ -51,15 +54,18 @@ function fillPoints(larger: number[], smaller: number[]): void {
     const numberInSmaller = (smaller.length - 2) / 6
     const numberInLarger = (larger.length - 2) / 6
     const numberToInsert = numberInLarger - numberInSmaller
-    const dist = numberInLarger / numberToInsert + 1
+    if (numberToInsert === 0) {
+        return
+    }
+    const dist = numberToInsert / numberInLarger
 
     for (let i = 0; i < numberToInsert; i++) {
-        const index = dist * i * 6 + 2
+        const index = Math.min(Math.floor(dist * i * 6) + 2, smaller.length)
         const x = smaller[index - 2]
         const y = smaller[index - 1]
 
         if (x !== x || y !== y) {
-          console.log('test', numberInSmaller, numberInLarger, numberToInsert, dist, index)
+            console.log('test', numberInSmaller, numberInLarger, numberToInsert, dist, index)
         }
 
         smaller.splice(index, 0, x, y, x, y, x, y)
