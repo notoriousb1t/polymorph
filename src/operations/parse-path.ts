@@ -1,9 +1,12 @@
 import { _, Z, T, Q, S, C, V, H } from '../constants'
 import { coalesce } from '../utilities/coalesce'
 
-// for parsing poly-commands
+// describes the number of arguments each command has
 const argLengths = { M: 2, H: 1, V: 1, L: 2, Z: 0, C: 6, S: 4, Q: 4, T: 2 }
 
+/**
+ * Used in this file to keep track of the current state of the parser.
+ */
 interface IParseContext {
     /**
      * Cursor X position
@@ -43,6 +46,9 @@ interface IParseContext {
     p: number[]
 }
 
+/**
+ * Ratio from the control point in a quad to a cubic bezier control points
+ */
 const quadraticRatio = 2.0 / 3
 
 function m(ctx: IParseContext): void {
@@ -138,6 +144,12 @@ const parsers = {
     T: t
 }
 
+/**
+ * Creates a new segment on this path
+ * @param ctx Parser context
+ * @param x Starting x position on this segment
+ * @param y Starting y position on this segment
+ */
 function addSegment(ctx: IParseContext, x: number, y: number): void {
     ctx.x = x
     ctx.y = y
@@ -147,6 +159,16 @@ function addSegment(ctx: IParseContext, x: number, y: number): void {
     ctx.p = p
 }
 
+/**
+ * Adds a curve to the segment
+ * @param ctx Parser context
+ * @param x1 start control point x
+ * @param y1 start control point y
+ * @param x2 end control point x
+ * @param y2 end control point y
+ * @param dx destination x
+ * @param dy destination y
+ */
 function addCurve(
     ctx: IParseContext,
     x1: number | undefined,
@@ -218,10 +240,11 @@ export function parsePath(d: string): number[][] {
             throw new Error(ctx.c + ' is not supported')
         }
 
+        // process each part of this command.  Use do-while to accomodate Z
         const t2 = terms as number[]
         let k = 1
         do {
-            // split this segment into a subsegment
+            // split this segment into a sub-segment
             ctx.t = t2.slice(k, k + maxLength)
 
             // convert to absolute if necessary
@@ -238,6 +261,11 @@ export function parsePath(d: string): number[][] {
     return ctx.s
 }
 
+/**
+ * Converts the current terms in the context to absolute position based on the
+ * current cursor position
+ * @param ctx Parser context
+ */
 function convertToAbsolute(ctx: IParseContext): void {
     if (ctx.c === V) {
         ctx.t[0] += ctx.y

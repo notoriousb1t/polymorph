@@ -1,6 +1,20 @@
 var polymorph = (function (exports) {
 'use strict';
 
+var selectorRegex = /^([#|\.]|path)/gmi;
+function getPath(selector) {
+    if (isString(selector)) {
+        if (!selectorRegex.test(selector)) {
+            return selector;
+        }
+        selector = document.querySelector(selector);
+    }
+    return selector.getAttribute('d');
+}
+function isString(obj) {
+    return typeof obj === 'string';
+}
+
 var _ = undefined;
 var V = 'V';
 var H = 'H';
@@ -179,7 +193,7 @@ function parseCommand(str, i) {
 }
 
 function parse(d) {
-    return parsePath(d).map(createPathSegmentArray);
+    return parsePath(getPath(d)).map(createPathSegmentArray);
 }
 function createPathSegmentArray(points) {
     var xmin, xmax, ymin, ymax;
@@ -283,6 +297,7 @@ function toBezier(d) {
     return renderPath(parsePath(d));
 }
 
+exports.getPath = getPath;
 exports.parse = parse;
 exports.morph = morph;
 exports.toBezier = toBezier;

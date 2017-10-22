@@ -1,8 +1,13 @@
 import { IPathSegment } from '../types'
 import { parsePath } from './parse-path'
+import { getPath } from './get-path';
 
-export function parse(d: string): IPathSegment[] {
-    return parsePath(d).map(createPathSegmentArray)
+/**
+ * Parses the path data and returns a model describing it
+ * @param d Path Data, A path element, or a selector for a path element
+ */
+export function parse(d: string | { tagName: string }): IPathSegment[] {
+    return parsePath(getPath(d)).map(createPathSegmentArray)
 }
 
 function createPathSegmentArray(points: number[]): IPathSegment {
