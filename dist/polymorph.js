@@ -189,9 +189,9 @@ function createPathSegmentArray(points) {
         var x = points[i + 4];
         var y = points[i + 5];
         xmin = Math.min(xmin, x);
-        xmax = Math.min(xmax, x);
+        xmax = Math.max(xmax, x);
         ymin = Math.min(ymin, y);
-        ymax = Math.min(ymax, y);
+        ymax = Math.max(ymax, y);
     }
     return {
         d: points,
@@ -218,12 +218,47 @@ function formatNumber(n) {
 }
 
 function mix(leftSegments, rightSegments) {
-    var l = leftSegments.map(function (s) { return s.d; });
-    var r = rightSegments.map(function (s) { return s.d; });
-    return function (offset) { return renderPath(mixPointArrays(l, r, offset)); };
+    if (leftSegments.length !== rightSegments.length) {
+        fillSegments(leftSegments, rightSegments);
+    }
+    var leftSegment = leftSegments.map(function (s) { return s.d; });
+    var rightSegment = rightSegments.map(function (s) { return s.d; });
+    for (var i = 0; i < leftSegment.length; i++) {
+        fillPoints(leftSegment[i], rightSegment[i]);
+    }
+    return function (offset) { return renderPath(mixPointArrays(leftSegment, rightSegment, offset)); };
 }
 function mixPointArrays(l, r, o) {
     return l.map(function (a, h) { return mixPoints(a, r[h], o); });
+}
+function fillSegments(larger, smaller) {
+    if (larger.length < smaller.length) {
+        return fillSegments(smaller, larger);
+    }
+    for (var i = smaller.length; i < larger.length; i++) {
+        var l = larger[i];
+        var x = l.w / 2 + l.x;
+        var y = l.h / 2 + l.y;
+        var s = { d: [], x: l.x, y: l.y, h: l.h, w: l.w };
+        for (var k = 0; k < l.d.length; k += 2) {
+            s.d.push(x, y);
+        }
+    }
+}
+function fillPoints(larger, smaller) {
+    if (larger.length < smaller.length) {
+        return fillPoints(smaller, larger);
+    }
+    var numberInSmaller = (smaller.length - 2) / 6;
+    var numberInLarger = (larger.length - 2) / 6;
+    var numberToInsert = numberInLarger - numberInSmaller;
+    var dist = numberInLarger / numberToInsert + 1;
+    for (var i = 0; i < numberToInsert; i++) {
+        var index = numberInLarger * dist * i * 6 + 2;
+        var x = smaller[index - 2];
+        var y = smaller[index - 1];
+        smaller.splice(index, 0, x, y, x, y, x, y);
+    }
 }
 function mixPoints(a, b, o) {
     var results = [];

@@ -1,22 +1,70 @@
-import { IPathSegment } from '../types';
-import { renderPath } from './render-path';
+import { IPathSegment } from '../types'
+import { renderPath } from './render-path'
 
 export function mix(leftSegments: IPathSegment[], rightSegments: IPathSegment[]): (offset: number) => string {
-  const l = leftSegments.map((s: IPathSegment) => s.d);
-  const r = rightSegments.map((s: IPathSegment) => s.d);
+    if (leftSegments.length !== rightSegments.length) {
+        // ensure there are an equal amount of segments
+        fillSegments(leftSegments, rightSegments)
+    }
 
-  return (offset: number) => renderPath(mixPointArrays(l, r, offset))
+    const leftSegment = leftSegments.map((s: IPathSegment) => s.d)
+    const rightSegment = rightSegments.map((s: IPathSegment) => s.d)
+
+    for (let i = 0; i < leftSegment.length; i++) {
+        // ensure points in segments are equal length
+        fillPoints(leftSegment[i], rightSegment[i])
+    }
+
+    return (offset: number) => renderPath(mixPointArrays(leftSegment, rightSegment, offset))
 }
 
 function mixPointArrays(l: number[][], r: number[][], o: number): number[][] {
-  return l.map((a: number[], h: number) => mixPoints(a, r[h], o));
+    return l.map((a: number[], h: number) => mixPoints(a, r[h], o))
+}
+
+function fillSegments(larger: IPathSegment[], smaller: IPathSegment[]): void {
+    if (larger.length < smaller.length) {
+        // swap sides so larger is larger (or equal)
+        return fillSegments(smaller, larger)
+    }
+
+    for (let i = smaller.length; i < larger.length; i++) {
+        const l = larger[i]
+        const x = l.w / 2 + l.x
+        const y = l.h / 2 + l.y
+
+        const s: IPathSegment = { d: [], x: l.x, y: l.y, h: l.h, w: l.w }
+        for (let k = 0; k < l.d.length; k += 2) {
+            s.d.push(x, y)
+        }
+    }
+}
+
+function fillPoints(larger: number[], smaller: number[]): void {
+    if (larger.length < smaller.length) {
+        // swap sides so larger is larger (or equal)
+        return fillPoints(smaller, larger)
+    }
+
+    // number of cubic beziers
+    const numberInSmaller = (smaller.length - 2) / 6
+    const numberInLarger = (larger.length - 2) / 6
+    const numberToInsert = numberInLarger - numberInSmaller
+    const dist = numberInLarger / numberToInsert + 1
+
+    for (let i = 0; i < numberToInsert; i++) {
+        const index = numberInLarger * dist * i * 6 + 2
+        const x = smaller[index - 2]
+        const y = smaller[index - 1]
+        smaller.splice(index, 0, x, y, x, y, x, y)
+    }
 }
 
 export function mixPoints(a: number[], b: number[], o: number): number[] {
-  // paths should be the same length
-  const results: number[] = []
-  for (let i = 0; i < a.length; i++) {
-    results.push(a[i] + (b[i] - a[i]) * o)
-  }
-  return results
+    // paths should be the same length
+    const results: number[] = []
+    for (let i = 0; i < a.length; i++) {
+        results.push(a[i] + (b[i] - a[i]) * o)
+    }
+    return results
 }
