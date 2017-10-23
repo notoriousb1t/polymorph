@@ -1,6 +1,10 @@
 var polymorph = (function (exports) {
 'use strict';
 
+function isString(obj) {
+    return typeof obj === 'string';
+}
+
 var selectorRegex = /^([#|\.]|path)/i;
 function getPath(selector) {
     if (isString(selector)) {
@@ -10,9 +14,6 @@ function getPath(selector) {
         selector = document.querySelector(selector);
     }
     return selector.getAttribute('d');
-}
-function isString(obj) {
-    return typeof obj === 'string';
 }
 
 var _ = undefined;
@@ -46,24 +47,46 @@ var min = Math.min;
 var max = Math.max;
 var floor = Math.floor;
 
-function morphPath(leftPath, rightPath) {
-    if (leftPath.data.length !== rightPath.data.length) {
-        fillSegments(leftPath.data, rightPath.data);
+function raiseError() {
+    throw new Error(Array.prototype.join.call(arguments, ' '));
+}
+
+function morphPath(paths) {
+    if (!paths || paths.length < 2) {
+        raiseError('invalid arguments');
     }
-    var leftSegment = leftPath.data.map(selectPath);
-    var rightSegment = rightPath.data.map(selectPath);
+    var interpolators = [];
+    for (var h = 0; h < paths.length - 1; h++) {
+        interpolators.push(getPathInterpolator(paths[h], paths[h + 1]));
+    }
+    var len = interpolators.length;
+    return function (offset) {
+        var d = len * offset;
+        var flr = min(floor(d), len - 1);
+        var result = interpolators[flr]((d - flr) / (flr + 1));
+        return isString(result) ? result : renderPath(result);
+    };
+}
+function getPathInterpolator(left, right) {
+    var leftPath = left.data.slice();
+    var rightPath = right.data.slice();
+    if (leftPath.length !== rightPath.length) {
+        fillSegments(leftPath, rightPath);
+    }
+    var leftSegment = leftPath.map(selectPath);
+    var rightSegment = rightPath.map(selectPath);
     var length = leftSegment.length;
     for (var i = 0; i < length; i++) {
         fillPoints(leftSegment[i], rightSegment[i]);
     }
     return function (offset) {
         if (abs(offset - 0) < EPSILON) {
-            return leftPath.path;
+            return left.path;
         }
         if (abs(offset - 1) < EPSILON) {
-            return rightPath.path;
+            return right.path;
         }
-        return renderPath(mixPointArrays(leftSegment, rightSegment, offset));
+        return mixPointArrays(leftSegment, rightSegment, offset);
     };
 }
 function selectPath(s) {
@@ -264,7 +287,7 @@ function parsePoints(d) {
         var parser = parsers[command];
         var maxLength = argLengths[command];
         if (!parser) {
-            throw new Error(ctx.c + ' is not supported');
+            raiseError(ctx.c, ' is not supported');
         }
         var t2 = terms;
         var k = 1;
@@ -311,8 +334,8 @@ function parse(d) {
     return parsePath(getPath(d));
 }
 
-function morph(left, right) {
-    return morphPath(parse(left), parse(right));
+function morph(paths) {
+    return morphPath(paths.map(parse));
 }
 
 function toBezier(d) {

@@ -1,3 +1,5 @@
+import { isString } from './utilities/inspect';
+
 const selectorRegex = /^([#|\.]|path)/i;
 
 /**
@@ -12,9 +14,4 @@ export function getPath(selector: any): string {
     selector = document.querySelector(selector);
   }
   return selector.getAttribute('d');
-}
-
-
-function isString(obj: any): boolean {
-  return typeof obj === 'string'
 }

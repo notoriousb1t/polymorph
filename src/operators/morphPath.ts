@@ -1,6 +1,10 @@
 import { IPathSegment, IPath } from '../types'
 import { renderPath } from './renderPath'
-import { EPSILON, abs, floor, min } from '../utilities/math';
+import { EPSILON, abs, floor, min } from '../utilities/math'
+import { isString } from '../utilities/inspect'
+import { raiseError } from '../utilities/errors'
+
+type Interpolator = (offset: number) => number[][] | string
 
 /**
  * Returns a function to interpolate between the two path shapes.  polymorph.parse() must be called
@@ -8,14 +12,45 @@ import { EPSILON, abs, floor, min } from '../utilities/math';
  * @param leftPath path model to interpolate
  * @param rightPath path model to interpolate
  */
-export function morphPath(leftPath: IPath, rightPath: IPath): (offset: number) => string {
-    if (leftPath.data.length !== rightPath.data.length) {
-        // ensure there are an equal amount of segments
-        fillSegments(leftPath.data, rightPath.data)
+export function morphPath(paths: IPath[]): (offset: number) => string {
+    if (!paths || paths.length < 2) {
+        raiseError('invalid arguments')
     }
 
-    const leftSegment = leftPath.data.map(selectPath)
-    const rightSegment = rightPath.data.map(selectPath)
+    const interpolators: Interpolator[] = []
+    for (let h = 0; h < paths.length - 1; h++) {
+        interpolators.push(getPathInterpolator(paths[h], paths[h + 1]))
+    }
+
+    const len = interpolators.length
+    return (offset: number) => {
+        const d = len * offset
+        const flr = min(floor(d), len - 1)
+        const result = interpolators[flr]((d - flr) / (flr + 1))
+        return isString(result) ? result as string : renderPath(result as number[][])
+    }
+}
+
+// function joinInterpolators(items: Interpolator): Interpolator {
+//     const len = items.length
+//     return (offset: number) => {
+//         const d = len * offset
+//         const flr = min(floor(d), len - 1)
+//         return items[flr]((d - flr) / (flr + 1))
+//     }
+// }
+
+function getPathInterpolator(left: IPath, right: IPath): Interpolator {
+    const leftPath = left.data.slice()
+    const rightPath = right.data.slice()
+
+    if (leftPath.length !== rightPath.length) {
+        // ensure there are an equal amount of segments
+        fillSegments(leftPath, rightPath)
+    }
+
+    const leftSegment = leftPath.map(selectPath)
+    const rightSegment = rightPath.map(selectPath)
     const length = leftSegment.length
 
     for (let i = 0; i < length; i++) {
@@ -25,12 +60,12 @@ export function morphPath(leftPath: IPath, rightPath: IPath): (offset: number) =
 
     return (offset: number) => {
         if (abs(offset - 0) < EPSILON) {
-            return leftPath.path
+            return left.path
         }
         if (abs(offset - 1) < EPSILON) {
-            return rightPath.path
+            return right.path
         }
-        return renderPath(mixPointArrays(leftSegment, rightSegment, offset))
+        return mixPointArrays(leftSegment, rightSegment, offset)
     }
 }
 

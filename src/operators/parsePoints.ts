@@ -1,6 +1,7 @@
 import { _, Z, T, Q, S, C, V, H } from '../constants'
 import { coalesce } from '../utilities/coalesce'
 import { IParseContext } from '../types'
+import { raiseError } from '../utilities/errors';
 
 // describes the number of arguments each command has
 const argLengths = { M: 2, H: 1, V: 1, L: 2, Z: 0, C: 6, S: 4, Q: 4, T: 2 }
@@ -238,7 +239,7 @@ export function parsePoints(d: string): number[][] {
         const parser = parsers[command]
         const maxLength = argLengths[command]
         if (!parser) {
-            throw new Error(ctx.c + ' is not supported')
+            raiseError(ctx.c, ' is not supported')
         }
 
         // process each part of this command.  Use do-while to accomodate Z
