@@ -1,10 +1,7 @@
-import { IPathSegment, IPath } from '../types'
+import { IPathSegment, IPath, IRenderer } from '../types'
 import { renderPath } from './renderPath'
 import { EPSILON, abs, floor, min } from '../utilities/math'
-import { isString } from '../utilities/inspect'
 import { raiseError } from '../utilities/errors'
-
-type Interpolator = (offset: number) => number[][] | string
 
 /**
  * Returns a function to interpolate between the two path shapes.  polymorph.parse() must be called
@@ -17,30 +14,20 @@ export function morphPath(paths: IPath[]): (offset: number) => string {
         raiseError('invalid arguments')
     }
 
-    const interpolators: Interpolator[] = []
+    const items: IRenderer<number[][] | string>[] = []
     for (let h = 0; h < paths.length - 1; h++) {
-        interpolators.push(getPathInterpolator(paths[h], paths[h + 1]))
+      items.push(getPathInterpolator(paths[h], paths[h + 1]))
     }
 
-    const len = interpolators.length
-    return (offset: number) => {
+    const len = items.length
+    return (offset: number): string => {
         const d = len * offset
         const flr = min(floor(d), len - 1)
-        const result = interpolators[flr]((d - flr) / (flr + 1))
-        return isString(result) ? result as string : renderPath(result as number[][])
+        return renderPath(items[flr]((d - flr) / (flr + 1)))
     }
 }
 
-// function joinInterpolators(items: Interpolator): Interpolator {
-//     const len = items.length
-//     return (offset: number) => {
-//         const d = len * offset
-//         const flr = min(floor(d), len - 1)
-//         return items[flr]((d - flr) / (flr + 1))
-//     }
-// }
-
-function getPathInterpolator(left: IPath, right: IPath): Interpolator {
+function getPathInterpolator(left: IPath, right: IPath): IRenderer<number[][] | string> {
     const leftPath = left.data.slice()
     const rightPath = right.data.slice()
 
@@ -120,7 +107,6 @@ function fillPoints(larger: number[], smaller: number[]): void {
 }
 
 export function mixPoints(a: number[], b: number[], o: number): number[] {
-    // paths should be the same length
     const results: number[] = []
     for (let i = 0; i < a.length; i++) {
         results.push(a[i] + (b[i] - a[i]) * o)

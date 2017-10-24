@@ -1,3 +1,7 @@
+export interface IRenderer<T> {
+  (offset: number): T
+}
+
 export interface IPath {
   path: string
   data: IPathSegment[]

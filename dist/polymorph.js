@@ -26,7 +26,16 @@ var S = 'S';
 var Q = 'Q';
 var T = 'T';
 
+var EPSILON = Math.pow(2, -52);
+var abs = Math.abs;
+var min = Math.min;
+var max = Math.max;
+var floor = Math.floor;
+
 function renderPath(ns) {
+    if (isString(ns)) {
+        return ns;
+    }
     var parts = [];
     for (var i = 0; i < ns.length; i++) {
         var n = ns[i];
@@ -38,14 +47,8 @@ function renderPath(ns) {
     return parts.join(' ');
 }
 function formatNumber(n) {
-    return (Math.round(n * 100) / 100).toString();
+    return (floor(n * 100) / 100).toString();
 }
-
-var EPSILON = Math.pow(2, -52);
-var abs = Math.abs;
-var min = Math.min;
-var max = Math.max;
-var floor = Math.floor;
 
 function raiseError() {
     throw new Error(Array.prototype.join.call(arguments, ' '));
@@ -55,16 +58,15 @@ function morphPath(paths) {
     if (!paths || paths.length < 2) {
         raiseError('invalid arguments');
     }
-    var interpolators = [];
+    var items = [];
     for (var h = 0; h < paths.length - 1; h++) {
-        interpolators.push(getPathInterpolator(paths[h], paths[h + 1]));
+        items.push(getPathInterpolator(paths[h], paths[h + 1]));
     }
-    var len = interpolators.length;
+    var len = items.length;
     return function (offset) {
         var d = len * offset;
         var flr = min(floor(d), len - 1);
-        var result = interpolators[flr]((d - flr) / (flr + 1));
-        return isString(result) ? result : renderPath(result);
+        return renderPath(items[flr]((d - flr) / (flr + 1)));
     };
 }
 function getPathInterpolator(left, right) {

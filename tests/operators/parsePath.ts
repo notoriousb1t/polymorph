@@ -73,10 +73,10 @@ describe('parsePath()', () => {
         )
     })
     it('parses q', () => {
-        assert.deepEqual(renderPath(parsePoints('M 10 10 q 10 5 15 25')), 'M 10 10 C 16.67 13.33 21.67 21.67 25 35')
+        assert.deepEqual(renderPath(parsePoints('M 10 10 q 10 5 15 25')), 'M 10 10 C 16.66 13.33 21.66 21.66 25 35')
     })
     it('parses Q', () => {
-        assert.deepEqual(renderPath(parsePoints('M 10 10 Q 20 15 25 35')), 'M 10 10 C 16.67 13.33 21.67 21.67 25 35')
+        assert.deepEqual(renderPath(parsePoints('M 10 10 Q 20 15 25 35')), 'M 10 10 C 16.66 13.33 21.66 21.66 25 35')
     })
     it('parses t', () => {
         assert.deepEqual(renderPath(parsePoints('M 10 10 t 15 25')), 'M 10 10 C 10 10 10 10 25 35')
@@ -84,13 +84,13 @@ describe('parsePath()', () => {
     it('parses t + t', () => {
         assert.deepEqual(
             renderPath(parsePoints('M 10 10 t 15 25 t 25 15')),
-            'M 10 10 C 10 10 10 10 25 35 35 51.67 43.33 56.67 50 50'
+            'M 10 10 C 10 10 10 10 25 35 35 51.66 43.33 56.66 50 50'
         )
     })
     it('parses t with multiple argument sets', () => {
         assert.deepEqual(
             renderPath(parsePoints('M 10 10 t 15 25 25 15')),
-            'M 10 10 C 10 10 10 10 25 35 35 51.67 43.33 56.67 50 50'
+            'M 10 10 C 10 10 10 10 25 35 35 51.66 43.33 56.66 50 50'
         )
     })
     it('parses T', () => {
@@ -99,13 +99,13 @@ describe('parsePath()', () => {
     it('parses T + T', () => {
         assert.deepEqual(
             renderPath(parsePoints('M 10 10 T 25 35 T 70 50')),
-            'M 10 10 C 10 10 10 10 25 35 35 51.67 50 56.67 70 50'
+            'M 10 10 C 10 10 10 10 25 35 35 51.66 50 56.66 70 50'
         )
     })
     it('parses T with multiple argument sets', () => {
         assert.deepEqual(
             renderPath(parsePoints('M 10 10 T 25 35 70 50')),
-            'M 10 10 C 10 10 10 10 25 35 35 51.67 50 56.67 70 50'
+            'M 10 10 C 10 10 10 10 25 35 35 51.66 50 56.66 70 50'
         )
     })
 
