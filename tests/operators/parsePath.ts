@@ -5,13 +5,13 @@ import { renderPath } from '../../src/operators/renderPath'
 
 describe('parsePath()', () => {
     it('parses terms properly with spaces', () => {
-        assert.deepEqual(parsePath('M 10 42').data[0].d, [10, 42])
+        assert.deepEqual(parsePath('M 10 42 v 0').data[0].d, [10, 42, 10, 42, 10, 42, 10, 42])
     })
     it('parses terms properly with commas', () => {
-        assert.deepEqual(parsePath('M10,42').data[0].d, [10, 42])
+        assert.deepEqual(parsePath('M10,42v0').data[0].d, [10, 42, 10, 42, 10, 42, 10, 42])
     })
     it('parses move (M | m)', () => {
-        assert.deepEqual(parsePath('M 10 42').data[0].d, [10, 42])
+        assert.deepEqual(parsePath('M 10 42v0').data[0].d, [10, 42, 10, 42, 10, 42, 10, 42])
     })
     it('parses move (Z | z)', () => {
         assert.deepEqual(parsePath('M 10 42z').data[0].d, [10, 42, 10, 42, 10, 42, 10, 42])

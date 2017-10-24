@@ -1,6 +1,8 @@
 export const EPSILON = 2 ** -52
 
-export const abs = Math.abs
-export const min = Math.min
-export const max = Math.max
-export const floor = Math.floor
+const math = Math
+export const abs = math.abs
+export const min = math.min
+export const max = math.max
+export const floor = math.floor
+export const square = (n: number) => math.pow(n, 2)

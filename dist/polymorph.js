@@ -27,10 +27,12 @@ var Q = 'Q';
 var T = 'T';
 
 var EPSILON = Math.pow(2, -52);
-var abs = Math.abs;
-var min = Math.min;
-var max = Math.max;
-var floor = Math.floor;
+var math = Math;
+var abs = math.abs;
+var min = math.min;
+var max = math.max;
+var floor = math.floor;
+var square = function (n) { return math.pow(n, 2); };
 
 function renderPath(ns) {
     if (isString(ns)) {
@@ -54,10 +56,6 @@ function raiseError() {
     throw new Error(Array.prototype.join.call(arguments, ' '));
 }
 
-function list(size) {
-    return new Array(size);
-}
-
 function morphPath(paths) {
     if (!paths || paths.length < 2) {
         raiseError('invalid arguments');
@@ -76,13 +74,19 @@ function morphPath(paths) {
 function getPathInterpolator(left, right) {
     var leftPath = left.data.slice();
     var rightPath = right.data.slice();
+    leftPath.sort(sizeDesc);
+    rightPath.sort(sizeDesc);
     if (leftPath.length !== rightPath.length) {
         fillSegments(leftPath, rightPath);
     }
-    var leftSegment = leftPath.map(selectPath);
-    var rightSegment = rightPath.map(selectPath);
+    for (var i = 0; i < leftPath.length; i++) {
+        redraw(leftPath[i].d);
+        redraw(rightPath[i].d);
+    }
+    var leftSegment = leftPath;
+    var rightSegment = rightPath;
     for (var i = 0; i < leftSegment.length; i++) {
-        fillPoints(leftSegment[i], rightSegment[i]);
+        fillPoints(leftSegment[i].d, rightSegment[i].d);
     }
     return function (offset) {
         if (abs(offset - 0) < EPSILON) {
@@ -91,15 +95,39 @@ function getPathInterpolator(left, right) {
         if (abs(offset - 1) < EPSILON) {
             return right.path;
         }
-        var results = list(leftSegment.length);
+        var results = Array(leftSegment.length);
         for (var h = 0; h < leftSegment.length; h++) {
-            results[h] = mixPoints(leftSegment[h], rightSegment[h], offset);
+            results[h] = mixPoints(leftSegment[h].d, rightSegment[h].d, offset);
         }
         return results;
     };
 }
-function selectPath(s) {
-    return s.d.sort(distance);
+function sizeDesc(a, b) {
+    return square(a.x) + square(a.y) - (square(b.x) + square(b.y));
+}
+function redraw(ns) {
+    var len = ns.length;
+    if (ns[len - 2] !== ns[0] || ns[len - 1] !== ns[1]) {
+        return;
+    }
+    ns.splice(0, 2);
+    len = ns.length;
+    var index = 0;
+    var minAmount = Number.MAX_VALUE;
+    for (var i = 0; i < len; i += 6) {
+        var next = square(ns[i]) + square(ns[i + 1]);
+        if (next < minAmount) {
+            minAmount = next;
+            index = i;
+        }
+    }
+    rotate(ns, index);
+    ns.splice(0, 0, ns[len - 2], ns[len - 1]);
+}
+function rotate(ns, count) {
+    while (count--) {
+        ns.push(ns.shift());
+    }
 }
 function fillSegments(larger, smaller) {
     var largeLen = larger.length;
@@ -112,12 +140,12 @@ function fillSegments(larger, smaller) {
         var l = larger[i];
         var x = l.w / 2 + l.x;
         var y = l.h / 2 + l.y;
-        var d = list(l.d.length);
+        var d = Array(l.d.length);
         for (var k = 0; k < l.d.length; k += 2) {
             d[k] = x;
             d[k + 1] = y;
         }
-        smaller[i] = { d: d, x: l.x, y: l.y, h: l.h, w: l.w };
+        smaller[i] = { d: d, x: l.x, y: l.y, h: l.h, w: l.w, p: true };
     }
 }
 function fillPoints(larger, smaller) {
@@ -139,7 +167,7 @@ function fillPoints(larger, smaller) {
     }
 }
 function mixPoints(a, b, o) {
-    var results = list(a.length);
+    var results = Array(a.length);
     for (var i = 0; i < a.length; i++) {
         results[i] = a[i] + (b[i] - a[i]) * o;
     }
@@ -302,7 +330,7 @@ function parsePoints(d) {
         var t2 = terms;
         var k = 1;
         do {
-            ctx.t = t2.slice(k, k + maxLength);
+            ctx.t = t2.length === 1 ? t2 : t2.slice(k, k + maxLength);
             if (isRelative) {
                 convertToAbsolute(ctx);
             }

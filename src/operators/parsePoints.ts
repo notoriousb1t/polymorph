@@ -1,7 +1,7 @@
 import { _, Z, T, Q, S, C, V, H } from '../constants'
 import { coalesce } from '../utilities/coalesce'
 import { IParseContext } from '../types'
-import { raiseError } from '../utilities/errors';
+import { raiseError } from '../utilities/errors'
 
 // describes the number of arguments each command has
 const argLengths = { M: 2, H: 1, V: 1, L: 2, Z: 0, C: 6, S: 4, Q: 4, T: 2 }
@@ -247,7 +247,7 @@ export function parsePoints(d: string): number[][] {
         let k = 1
         do {
             // split this segment into a sub-segment
-            ctx.t = t2.slice(k, k + maxLength)
+            ctx.t = t2.length === 1 ? t2 : t2.slice(k, k + maxLength)
 
             // convert to absolute if necessary
             if (isRelative) {

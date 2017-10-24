@@ -31,6 +31,10 @@ export interface IPathSegment {
    * Approximate y position (upper)
    */
   y: number;
+  /**
+   * Placeholder path
+   */
+  p?: boolean;
 }
 
 export interface IPathElement {
