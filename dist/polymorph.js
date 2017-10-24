@@ -54,6 +54,10 @@ function raiseError() {
     throw new Error(Array.prototype.join.call(arguments, ' '));
 }
 
+function list(size) {
+    return new Array(size);
+}
+
 function morphPath(paths) {
     if (!paths || paths.length < 2) {
         raiseError('invalid arguments');
@@ -77,8 +81,7 @@ function getPathInterpolator(left, right) {
     }
     var leftSegment = leftPath.map(selectPath);
     var rightSegment = rightPath.map(selectPath);
-    var length = leftSegment.length;
-    for (var i = 0; i < length; i++) {
+    for (var i = 0; i < leftSegment.length; i++) {
         fillPoints(leftSegment[i], rightSegment[i]);
     }
     return function (offset) {
@@ -88,28 +91,33 @@ function getPathInterpolator(left, right) {
         if (abs(offset - 1) < EPSILON) {
             return right.path;
         }
-        return mixPointArrays(leftSegment, rightSegment, offset);
+        var results = list(leftSegment.length);
+        for (var h = 0; h < leftSegment.length; h++) {
+            results[h] = mixPoints(leftSegment[h], rightSegment[h], offset);
+        }
+        return results;
     };
 }
 function selectPath(s) {
-    return s.d.slice();
-}
-function mixPointArrays(l, r, o) {
-    return l.map(function (a, h) { return mixPoints(a, r[h], o); });
+    return s.d.sort(distance);
 }
 function fillSegments(larger, smaller) {
-    if (larger.length < smaller.length) {
+    var largeLen = larger.length;
+    var smallLen = smaller.length;
+    if (largeLen < smallLen) {
         return fillSegments(smaller, larger);
     }
-    for (var i = smaller.length; i < larger.length; i++) {
+    smaller.length = largeLen;
+    for (var i = smallLen; i < largeLen; i++) {
         var l = larger[i];
         var x = l.w / 2 + l.x;
         var y = l.h / 2 + l.y;
-        var s = { d: [], x: l.x, y: l.y, h: l.h, w: l.w };
+        var d = list(l.d.length);
         for (var k = 0; k < l.d.length; k += 2) {
-            s.d.push(x, y);
+            d[k] = x;
+            d[k + 1] = y;
         }
-        smaller.push(s);
+        smaller[i] = { d: d, x: l.x, y: l.y, h: l.h, w: l.w };
     }
 }
 function fillPoints(larger, smaller) {
@@ -131,9 +139,9 @@ function fillPoints(larger, smaller) {
     }
 }
 function mixPoints(a, b, o) {
-    var results = [];
+    var results = list(a.length);
     for (var i = 0; i < a.length; i++) {
-        results.push(a[i] + (b[i] - a[i]) * o);
+        results[i] = a[i] + (b[i] - a[i]) * o;
     }
     return results;
 }

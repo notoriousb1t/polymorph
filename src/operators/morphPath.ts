@@ -2,6 +2,7 @@ import { IPathSegment, IPath, IRenderer } from '../types'
 import { renderPath } from './renderPath'
 import { EPSILON, abs, floor, min } from '../utilities/math'
 import { raiseError } from '../utilities/errors'
+import { list } from '../utilities/list'
 
 /**
  * Returns a function to interpolate between the two path shapes.  polymorph.parse() must be called
@@ -16,7 +17,7 @@ export function morphPath(paths: IPath[]): (offset: number) => string {
 
     const items: IRenderer<number[][] | string>[] = []
     for (let h = 0; h < paths.length - 1; h++) {
-      items.push(getPathInterpolator(paths[h], paths[h + 1]))
+        items.push(getPathInterpolator(paths[h], paths[h + 1]))
     }
 
     const len = items.length
@@ -38,9 +39,8 @@ function getPathInterpolator(left: IPath, right: IPath): IRenderer<number[][] | 
 
     const leftSegment = leftPath.map(selectPath)
     const rightSegment = rightPath.map(selectPath)
-    const length = leftSegment.length
 
-    for (let i = 0; i < length; i++) {
+    for (let i = 0; i < leftSegment.length; i++) {
         // ensure points in segments are equal length
         fillPoints(leftSegment[i], rightSegment[i])
     }
@@ -52,7 +52,12 @@ function getPathInterpolator(left: IPath, right: IPath): IRenderer<number[][] | 
         if (abs(offset - 1) < EPSILON) {
             return right.path
         }
-        return mixPointArrays(leftSegment, rightSegment, offset)
+
+        const results = list<number[]>(leftSegment.length)
+        for (let h = 0; h < leftSegment.length; h++) {
+            results[h] = mixPoints(leftSegment[h], rightSegment[h], offset)
+        }
+        return results
     }
 }
 
@@ -60,26 +65,29 @@ function selectPath(s: IPathSegment): number[] {
     return s.d.slice()
 }
 
-function mixPointArrays(l: number[][], r: number[][], o: number): number[][] {
-    return l.map((a: number[], h: number) => mixPoints(a, r[h], o))
-}
-
 export function fillSegments(larger: IPathSegment[], smaller: IPathSegment[]): void {
-    if (larger.length < smaller.length) {
+    const largeLen = larger.length
+    const smallLen = smaller.length
+    if (largeLen < smallLen) {
         // swap sides so larger is larger (or equal)
         return fillSegments(smaller, larger)
     }
 
-    for (let i = smaller.length; i < larger.length; i++) {
+    // resize the array
+    smaller.length = largeLen
+
+    for (let i = smallLen; i < largeLen; i++) {
         const l = larger[i]
         const x = l.w / 2 + l.x
         const y = l.h / 2 + l.y
 
-        const s: IPathSegment = { d: [], x: l.x, y: l.y, h: l.h, w: l.w }
+        const d = list<number>(l.d.length)
         for (let k = 0; k < l.d.length; k += 2) {
-            s.d.push(x, y)
+            d[k] = x
+            d[k + 1] = y
         }
-        smaller.push(s)
+
+        smaller[i] = { d, x: l.x, y: l.y, h: l.h, w: l.w }
     }
 }
 
@@ -107,9 +115,9 @@ function fillPoints(larger: number[], smaller: number[]): void {
 }
 
 export function mixPoints(a: number[], b: number[], o: number): number[] {
-    const results: number[] = []
+    const results = list<number>(a.length)
     for (let i = 0; i < a.length; i++) {
-        results.push(a[i] + (b[i] - a[i]) * o)
+        results[i] = a[i] + (b[i] - a[i]) * o
     }
     return results
 }
