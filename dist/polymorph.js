@@ -56,7 +56,7 @@ function raiseError() {
     throw new Error(Array.prototype.join.call(arguments, ' '));
 }
 
-function morphPath(paths) {
+function interpolatePath(paths) {
     if (!paths || paths.length < 2) {
         raiseError('invalid arguments');
     }
@@ -372,33 +372,12 @@ function parse(d) {
     return parsePath(getPath(d));
 }
 
-function morph(paths) {
-    return morphPath(paths.map(parse));
-}
-
-function toBezier(d) {
-    return renderPath(parsePoints(getPath(d)));
-}
-
-function reversePath(s) {
-    var d = s.slice(-2);
-    for (var i = s.length - 3; i > -1; i -= 6) {
-        d.push(s[i - 1], s[i], s[i - 3], s[i - 2], s[i - 5], s[i - 4]);
-    }
-    return d;
-}
-
-function reverse(path) {
-    return renderPath(parsePoints(getPath(path))
-        .map(reversePath)
-        .reverse());
+function interpolate(paths) {
+    return interpolatePath(paths.map(parse));
 }
 
 exports.getPath = getPath;
-exports.morph = morph;
-exports.parse = parse;
-exports.toBezier = toBezier;
-exports.reverse = reverse;
+exports.interpolate = interpolate;
 
 return exports;
 

@@ -9,7 +9,7 @@ import { raiseError } from '../utilities/errors'
  * @param leftPath path model to interpolate
  * @param rightPath path model to interpolate
  */
-export function morphPath(paths: IPath[]): (offset: number) => string {
+export function interpolatePath(paths: IPath[]): (offset: number) => string {
     if (!paths || paths.length < 2) {
         raiseError('invalid arguments')
     }

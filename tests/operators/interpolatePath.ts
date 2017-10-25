@@ -1,5 +1,5 @@
 import { assert } from 'chai'
-import { mixPoints, fillSegments } from '../../src/operators/morphPath'
+import { mixPoints, fillSegments } from '../../src/operators/interpolatePath'
 import { parsePath } from '../../src/operators/parsePath';
 
 describe('mixPoints()', () => {

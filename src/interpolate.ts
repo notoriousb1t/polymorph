@@ -1,4 +1,4 @@
-import { morphPath } from './operators/morphPath'
+import { interpolatePath } from './operators/interpolatePath'
 import { parse } from './parse'
 import { IPathElement } from './types'
 
@@ -7,6 +7,6 @@ import { IPathElement } from './types'
  * @param left path data, CSS selector, or path element
  * @param right path data, CSS selector, or path element
  */
-export function morph(paths: (string | IPathElement)[]): (offset: number) => string {
-    return morphPath(paths.map(parse))
+export function interpolate(paths: (string | IPathElement)[]): (offset: number) => string {
+    return interpolatePath(paths.map(parse))
 }
