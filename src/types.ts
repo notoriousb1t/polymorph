@@ -24,17 +24,17 @@ export interface IPathSegment {
    */
   h: number;
   /**
-   * Approximate x position (left)
+   * Approximate x origin
    */
-  x: number;
+  ox: number;
   /**
-   * Approximate y position (upper)
+   * Approximate y origin
    */
-  y: number;
+  oy: number;
   /**
-   * Placeholder path
+   * Approximate perimeter
    */
-  p?: boolean;
+  p: number;
 }
 
 export interface IPathElement {
@@ -57,23 +57,23 @@ export interface IParseContext {
   /**
    * Last Control X
    */
-  cx: number
+  cx?: number
   /**
    * Last Control Y
    */
-  cy: number
+  cy?: number
   /**
    * Last command that was seen
    */
-  lc: string
+  lc?: string
   /**
    * Current command being parsed
    */
-  c: string
+  c?: string
   /**
    * Terms being parsed
    */
-  t: number[]
+  t?: number[]
   /**
    * All segments
    */
@@ -81,5 +81,5 @@ export interface IParseContext {
   /**
    * Current poly-bezier. (The one being bult)
    */
-  p: number[]
+  p?: number[]
 }

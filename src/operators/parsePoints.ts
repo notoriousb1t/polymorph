@@ -2,14 +2,10 @@ import { _, Z, T, Q, S, C, V, H } from '../constants'
 import { coalesce } from '../utilities/coalesce'
 import { IParseContext } from '../types'
 import { raiseError } from '../utilities/errors'
+import { quadraticRatio } from '../utilities/math';
 
 // describes the number of arguments each command has
 const argLengths = { M: 2, H: 1, V: 1, L: 2, Z: 0, C: 6, S: 4, Q: 4, T: 2 }
-
-/**
- * Ratio from the control point in a quad to a cubic bezier control points
- */
-const quadraticRatio = 2.0 / 3
 
 function m(ctx: IParseContext): void {
     const n = ctx.t
@@ -54,11 +50,13 @@ function q(ctx: IParseContext): void {
     const cy1 = n[1]
     const dx = n[2]
     const dy = n[3]
+    const x = ctx.x
+    const y = ctx.y
 
     addCurve(
         ctx,
-        ctx.x + (cx1 - ctx.x) * quadraticRatio,
-        ctx.y + (cy1 - ctx.y) * quadraticRatio,
+        x + (cx1 - x) * quadraticRatio,
+        y + (cy1 - y) * quadraticRatio,
         dx + (cx1 - dx) * quadraticRatio,
         dy + (cy1 - dy) * quadraticRatio,
         dx,
@@ -72,18 +70,20 @@ function t(ctx: IParseContext): void {
     const n = ctx.t
     const dx = n[0]
     const dy = n[1]
+    const x = ctx.x
+    const y = ctx.y
 
     let x1: number, y1: number, x2: number, y2: number
     if (ctx.lc === Q || ctx.lc === T) {
-        const cx1 = ctx.x * 2 - ctx.cx
-        const cy1 = ctx.y * 2 - ctx.cy
-        x1 = ctx.x + (cx1 - ctx.x) * quadraticRatio
-        y1 = ctx.y + (cy1 - ctx.y) * quadraticRatio
+        const cx1 = x * 2 - ctx.cx
+        const cy1 = y * 2 - ctx.cy
+        x1 = x + (cx1 - x) * quadraticRatio
+        y1 = y + (cy1 - y) * quadraticRatio
         x2 = dx + (cx1 - dx) * quadraticRatio
         y2 = dy + (cy1 - dy) * quadraticRatio
     } else {
-        x1 = x2 = ctx.x
-        y1 = y2 = ctx.y
+        x1 = x2 = x
+        y1 = y2 = y
     }
 
     addCurve(ctx, x1, y1, x2, y2, dx, dy)
@@ -138,23 +138,16 @@ function addCurve(
     dx: number | undefined,
     dy: number | undefined
 ): void {
+    // store x and y
     const x = ctx.x
     const y = ctx.y
 
-    // ensure values
-    x1 = coalesce(x1, x)
-    y1 = coalesce(y1, y)
-    x2 = coalesce(x2, x)
-    y2 = coalesce(y2, y)
-    dx = coalesce(dx, x)
-    dy = coalesce(dy, y)
+    // move cursor
+    ctx.x = coalesce(dx, x)
+    ctx.y = coalesce(dy, y)
 
     // add numbers to points
-    ctx.p.push(x1, y1, x2, y2, dx, dy)
-
-    // move cursor
-    ctx.x = dx
-    ctx.y = dy
+    ctx.p.push(coalesce(x1, x), (y1 = coalesce(y1, y)), (x2 = coalesce(x2, x)), (y2 = coalesce(y2, y)), ctx.x, ctx.y)
 
     // set last command type
     ctx.lc = ctx.c
@@ -211,13 +204,7 @@ export function parsePoints(d: string): number[][] {
     const ctx: IParseContext = {
         x: 0,
         y: 0,
-        lc: _,
-        c: _,
-        cx: _,
-        cy: _,
-        t: _,
-        s: [],
-        p: _
+        s: []
     }
 
     // split into segments

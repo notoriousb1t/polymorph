@@ -1,13 +1,14 @@
 import { IPathSegment, IPath } from '../types'
 import { parsePoints } from './parsePoints'
-import { min, max } from '../utilities/math';
+import { min, max } from '../utilities/math'
+import { perimeterPoints } from './perimeterPoints';
 
 function createPathSegmentArray(points: number[]): IPathSegment {
-    let xmin: number, xmax: number, ymin: number, ymax: number
-
     // get initial x,y from move command
-    xmin = xmax = points[0]
-    ymin = ymax = points[1]
+    let xmin = points[0]
+    let ymin = points[1]
+    let ymax = ymin
+    let xmax = xmin
 
     for (let i = 2; i < points.length; i += 6) {
         let x = points[i + 4]
@@ -19,12 +20,16 @@ function createPathSegmentArray(points: number[]): IPathSegment {
         ymax = max(ymax, y)
     }
 
+    const width = xmax - xmin
+    const height = ymax - ymin
+
     return {
         d: points,
-        x: xmin,
-        y: ymin,
-        w: xmax - xmin,
-        h: ymax - ymin
+        ox: width / 2 + xmin,
+        oy: height / 2 + ymin,
+        w: width,
+        h: height,
+        p: perimeterPoints(points)
     }
 }
 
