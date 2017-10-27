@@ -1,45 +1,89 @@
-import { IPathSegment, IPath } from '../types';
-import { reversePoints } from './reversePoints';
-import { fillSegments } from './fillSegments';
-import { normalizePoints } from './normalizePoints';
-import { fillPoints } from './fillPoints';
+import { IPathSegment, IPath, InterpolateOptions } from '../types'
+import { reversePoints } from './reversePoints'
+import { fillSegments } from './fillSegments'
+import { normalizePoints } from './normalizePoints'
+import { fillPoints } from './fillPoints'
+import { intersects } from '../utilities/intersects'
+import { INSERT, PRESERVE, CLOCKWISE } from '../constants'
+import { raiseError } from '../utilities/errors';
 
 function sizeDesc(a: IPathSegment, b: IPathSegment): number {
-  return b.p - a.p
+    return b.p - a.p
 }
 
+export function normalizePaths(left: IPath, right: IPath, options: InterpolateOptions): [number[][], number[][]] {
+    // sort segments by perimeter size (more or less area)
+    let leftPath = left.data.slice().sort(sizeDesc)
+    let rightPath = right.data.slice().sort(sizeDesc)
 
-export function normalizePaths(left: IPath, right: IPath): [number[][], number[][]] {
-  // sort segments by perimeter size (more or less area)
-  const leftPath = left.data.slice().sort(sizeDesc)
-  const rightPath = right.data.slice().sort(sizeDesc)
+    if (leftPath.length !== rightPath.length) {
+        if (options.fillStrategy === INSERT) {
+            // ensure there are an equal amount of segments
+            fillSegments(leftPath, rightPath)
+        } else {
+            raiseError('fillStrategy:preserve requires equal lengths')
+        }
+    }
 
-  if (leftPath[0].p < 0) {
-      // ensure left is drawn clockwise
-      leftPath.forEach((s: IPathSegment) => reversePoints(s.d))
-  }
-  if (rightPath[0].p < 0) {
-      // ensure right is drawn clockwise
-      rightPath.forEach((s: IPathSegment) => reversePoints(s.d))
-  }
+    let lp = leftPath.map(toPoints)
+    let rp = rightPath.map(toPoints)
 
-  if (leftPath.length !== rightPath.length) {
-      // ensure there are an equal amount of segments
-      fillSegments(leftPath, rightPath)
-  }
+    if (options.wind !== PRESERVE) {
+        const goClockwise = options.wind === CLOCKWISE
+        for (let i = 0; i < leftPath.length; i++) {
+            if (isClockwise(leftPath[i]) === goClockwise) {
+                leftPath[i].d = reversePoints(leftPath[i].d)
+            }
+            if (isClockwise(rightPath[i]) === goClockwise) {
+                rightPath[i].d = reversePoints(rightPath[i].d)
+            }
+        }
+    }
 
-  const l = leftPath.map((p: IPathSegment) => p.d)
-  const r = rightPath.map((p: IPathSegment) => p.d)
+    if (!!options.align) {
+        // shift so both svg's are being drawn from relatively the same place
+        for (let i = 0; i < leftPath.length; i++) {
+            const ls = leftPath[i]
+            normalizePoints(ls.x, ls.y, lp[i])
+            const rs = rightPath[i]
+            normalizePoints(rs.x, rs.y, rp[i])
+        }
+    }
 
-  for (let i = 0; i < leftPath.length; i++) {
-      // shift on a common weighting system
-      normalizePoints(l[i])
-      normalizePoints(r[i])
-  }
+    if (options.fillStrategy === INSERT) {
+        for (let i = 0; i < leftPath.length; i++) {
+            // ensure points in segments are equal length
+            fillPoints(lp[i], rp[i])
+        }
+    }
+    return [lp, rp]
+}
 
-  for (let i = 0; i < leftPath.length; i++) {
-      // ensure points in segments are equal length
-      fillPoints(l[i], r[i])
-  }
-  return [l, r]
+function toPoints(p: IPathSegment): number[] {
+    return p.d
+}
+
+/**
+ * Attempts to detect the winding direction by waiting for the first intersection of the mid-point.  This
+ * is not a perfect solution but it should solve a large majority of cases
+ * @param path
+ */
+export function isClockwise(path: IPathSegment): boolean {
+    const pts = path.d
+    const n = pts.length
+    const x4 = path.x + path.w
+    const y4 = path.y + path.h
+    const isUpper = path.ox - path.x > 0
+
+    let x1 = pts[n - 2]
+    let y1 = pts[n - 1]
+    for (let i = 0; i < n; i += 6) {
+        const x2 = pts[i]
+        const y2 = pts[i + 1]
+        if (intersects(x1, y1, x2, y2, path.x, path.y, x4, y4)) {
+            const forward = x2 - x1 > 0
+            return (forward && isUpper) || (!forward && !isUpper)
+        }
+    }
+    return false
 }

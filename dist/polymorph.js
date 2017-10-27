@@ -25,6 +25,9 @@ var C = 'C';
 var S = 'S';
 var Q = 'Q';
 var T = 'T';
+var INSERT = 'insert';
+var PRESERVE = 'preserve';
+var CLOCKWISE = 'clockwise';
 
 var math = Math;
 var abs = math.abs;
@@ -102,7 +105,7 @@ function distance(x1, y1, x2, y2) {
     return sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2));
 }
 
-function normalizePoints(ns) {
+function normalizePoints(x, y, ns) {
     var len = ns.length;
     if (ns[len - 2] !== ns[0] || ns[len - 1] !== ns[1]) {
         return;
@@ -111,7 +114,7 @@ function normalizePoints(ns) {
     len = ns.length;
     var index, minAmount;
     for (var i = 0; i < len; i += 6) {
-        var next = distance(0, 0, ns[i], ns[i + 1]);
+        var next = distance(x, y, ns[i], ns[i + 1]);
         if (minAmount === _ || next < minAmount) {
             minAmount = next;
             index = i;
@@ -140,41 +143,97 @@ function fillPoints(larger, smaller) {
     }
 }
 
+function ctns(a, b1, b2) {
+    return (a >= b1 && a <= b2) || (a >= b2 && a <= b1);
+}
+function intersects(x1, y1, x2, y2, x3, y3, x4, y4) {
+    var d = (x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4);
+    if (d === 0) {
+        return false;
+    }
+    var x = (x1 * y2 - y1 * x2) * (x3 - x4) - (x1 - x2) * (x3 * y4 - y3 * x4) / d;
+    var y = (x1 * y2 - y1 * x2) * (y3 - y4) - (y1 - y2) * (x3 * y4 - y3 * x4) / d;
+    return ctns(x, x1, x2) && ctns(y, y1, y2) && ctns(x, x3, x4) && ctns(y, y3, y4);
+}
+
 function sizeDesc(a, b) {
     return b.p - a.p;
 }
-function normalizePaths(left, right) {
+function normalizePaths(left, right, options) {
     var leftPath = left.data.slice().sort(sizeDesc);
     var rightPath = right.data.slice().sort(sizeDesc);
-    if (leftPath[0].p < 0) {
-        leftPath.forEach(function (s) { return reversePoints(s.d); });
-    }
-    if (rightPath[0].p < 0) {
-        rightPath.forEach(function (s) { return reversePoints(s.d); });
-    }
     if (leftPath.length !== rightPath.length) {
-        fillSegments(leftPath, rightPath);
+        if (options.fillStrategy === INSERT) {
+            fillSegments(leftPath, rightPath);
+        }
+        else {
+            raiseError('fillStrategy:preserve requires equal lengths');
+        }
     }
-    var l = leftPath.map(function (p) { return p.d; });
-    var r = rightPath.map(function (p) { return p.d; });
-    for (var i = 0; i < leftPath.length; i++) {
-        normalizePoints(l[i]);
-        normalizePoints(r[i]);
+    var lp = leftPath.map(toPoints);
+    var rp = rightPath.map(toPoints);
+    if (options.wind !== PRESERVE) {
+        var goClockwise = options.wind === CLOCKWISE;
+        for (var i = 0; i < leftPath.length; i++) {
+            if (isClockwise(leftPath[i]) === goClockwise) {
+                leftPath[i].d = reversePoints(leftPath[i].d);
+            }
+            if (isClockwise(rightPath[i]) === goClockwise) {
+                rightPath[i].d = reversePoints(rightPath[i].d);
+            }
+        }
     }
-    for (var i = 0; i < leftPath.length; i++) {
-        fillPoints(l[i], r[i]);
+    if (!!options.align) {
+        for (var i = 0; i < leftPath.length; i++) {
+            var ls = leftPath[i];
+            normalizePoints(ls.x, ls.y, lp[i]);
+            var rs = rightPath[i];
+            normalizePoints(rs.x, rs.y, rp[i]);
+        }
     }
-    return [l, r];
+    if (options.fillStrategy === INSERT) {
+        for (var i = 0; i < leftPath.length; i++) {
+            fillPoints(lp[i], rp[i]);
+        }
+    }
+    return [lp, rp];
+}
+function toPoints(p) {
+    return p.d;
+}
+function isClockwise(path) {
+    var pts = path.d;
+    var n = pts.length;
+    var x4 = path.x + path.w;
+    var y4 = path.y + path.h;
+    var isUpper = path.ox - path.x > 0;
+    var x1 = pts[n - 2];
+    var y1 = pts[n - 1];
+    for (var i = 0; i < n; i += 6) {
+        var x2 = pts[i];
+        var y2 = pts[i + 1];
+        if (intersects(x1, y1, x2, y2, path.x, path.y, x4, y4)) {
+            var forward = x2 - x1 > 0;
+            return (forward && isUpper) || (!forward && !isUpper);
+        }
+    }
+    return false;
 }
 
-function interpolatePath(paths) {
+var defaultOptions = {
+    align: true,
+    fillStrategy: 'insert',
+    wind: 'clockwise'
+};
+function interpolatePath(paths, options) {
+    options = fillObject(options, defaultOptions);
     if (!paths || paths.length < 2) {
         raiseError('invalid arguments');
     }
     var hlen = paths.length - 1;
     var items = Array(hlen);
     for (var h = 0; h < hlen; h++) {
-        items[h] = getPathInterpolator(paths[h], paths[h + 1]);
+        items[h] = getPathInterpolator(paths[h], paths[h + 1], options);
     }
     return function (offset) {
         var d = hlen * offset;
@@ -182,8 +241,8 @@ function interpolatePath(paths) {
         return renderPath(items[flr]((d - flr) / (flr + 1)));
     };
 }
-function getPathInterpolator(left, right) {
-    var matrix = normalizePaths(left, right);
+function getPathInterpolator(left, right, options) {
+    var matrix = normalizePaths(left, right, options);
     var n = matrix[0].length;
     return function (offset) {
         if (abs(offset - 0) < EPSILON) {
@@ -396,6 +455,8 @@ function createPathSegmentArray(points) {
     var height = ymax - ymin;
     return {
         d: points,
+        x: xmin,
+        y: ymin,
         ox: width / 2 + xmin,
         oy: height / 2 + ymin,
         w: width,
@@ -414,8 +475,8 @@ function parse(d) {
     return parsePath(getPath(d));
 }
 
-function interpolate(paths) {
-    return interpolatePath(paths.map(parse));
+function interpolate(paths, options) {
+    return interpolatePath(paths.map(parse), options || {});
 }
 
 exports.getPath = getPath;

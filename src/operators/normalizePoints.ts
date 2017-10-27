@@ -2,7 +2,7 @@ import { rotatePoints } from './rotatePoints';
 import { _ } from '../constants';
 import { distance } from '../utilities/distance';
 
-export function normalizePoints(ns: number[]): void {
+export function normalizePoints(x: number, y: number, ns: number[]): void {
   let len = ns.length
   if (ns[len - 2] !== ns[0] || ns[len - 1] !== ns[1]) {
       // skip redraw if this is not a closed shape
@@ -17,7 +17,7 @@ export function normalizePoints(ns: number[]): void {
   let index: number, minAmount: number
   for (let i = 0; i < len; i += 6) {
       // find the distance to the upper left corner
-      const next = distance(0, 0, ns[i], ns[i + 1])
+      const next = distance(x, y, ns[i], ns[i + 1])
 
       if (minAmount === _ || next < minAmount) {
           // capture the amount and set the index

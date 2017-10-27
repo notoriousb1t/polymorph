@@ -8,3 +8,7 @@ export const V = 'V',
     S = 'S',
     Q = 'Q',
     T = 'T'
+
+export const INSERT = 'insert' as 'insert'
+export const PRESERVE = 'preserve' as 'preserve'
+export const CLOCKWISE = 'clockwise' as 'clockwise'

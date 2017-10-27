@@ -4,8 +4,8 @@ function ctns(a: number, b1: number, b2: number): boolean {
 
 export function intersects(
     x1: number,
-    x2: number,
     y1: number,
+    x2: number,
     y2: number,
     x3: number,
     y3: number,
