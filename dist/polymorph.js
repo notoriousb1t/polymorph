@@ -96,8 +96,18 @@ function fillSegments(larger, smaller) {
 }
 
 function rotatePoints(ns, count) {
-    while (count--) {
-        ns.push(ns.shift());
+    var len = ns.length;
+    var rightLen = len - count;
+    var buffer = Array(count);
+    var i;
+    for (i = 0; i < count; i++) {
+        buffer[i] = ns[i];
+    }
+    for (i = count; i < len; i++) {
+        ns[i - count] = ns[i];
+    }
+    for (i = 0; i < count; i++) {
+        ns[rightLen + i] = buffer[i];
     }
 }
 
