@@ -1,3 +1,5 @@
+export type Matrix = [FloatArray[], FloatArray[]]
+
 export interface IRenderer<T> {
     (offset: number): T
 }
@@ -14,7 +16,7 @@ export interface IPathSegment {
     /**
      * Path data
      */
-    d: number[]
+    d: FloatArray
     /**
      * Approximate box width
      */
@@ -80,11 +82,11 @@ export interface IParseContext {
     /**
      * Terms being parsed
      */
-    t?: number[]
+    t?: FloatArray
     /**
      * All segments
      */
-    s: number[][]
+    s: FloatArray[]
     /**
      * Current poly-bezier. (The one being bult)
      */
@@ -92,20 +94,36 @@ export interface IParseContext {
 }
 
 export interface InterpolateOptions {
-  /**
-   * When true, this will move the starting position of all closed shapes to the upper left hand corner of the bounding box.
-   */
-  align?: boolean;
-  /**
-   * The wind (like a clock) direction of the path.
-   *  'preserve' will leave the path as is.  'clockwise' will change all subpaths to clockwise.  'counter-clockwise' will change all
-   *  paths to counter-clockwise. The default value is 'clockwise'.
-   */
-  wind?: 'preserve' | 'clockwise' | 'counter-clockwise';
-  /**
-   * Determines what strategy should be used for filling additional subpaths and when the number of points do not line up.
-   * 'preserve' assumes everything lines up, 'insert' will attempt to correct this by inserting empty subpaths and net0 points.
-   * The default value is 'insert'
-   */
-  fillStrategy?: 'preserve' | 'insert'
+    /**
+     * When true, this will move the starting position of all closed shapes to the upper left hand corner of the bounding box.
+     */
+    align?: boolean
+    /**
+     * The wind (like a clock) direction of the path.
+     *  'preserve' will leave the path as is.  'clockwise' will change all subpaths to clockwise.  'counter-clockwise' will change all
+     *  paths to counter-clockwise. The default value is 'clockwise'.
+     */
+    wind?: 'preserve' | 'clockwise' | 'counter-clockwise'
+    /**
+     * Determines what strategy should be used for filling additional subpaths and when the number of points do not line up.
+     * 'preserve' assumes everything lines up, 'insert' will attempt to correct this by inserting empty subpaths and net0 points.
+     * The default value is 'insert'
+     */
+    fillStrategy?: 'preserve' | 'insert'
+
+    /**
+     * Number of points to add to each sub-path.  This can be used for smoothing out shapes.  The default is 5
+     */
+    addPoints?: number
+}
+
+// tslint:disable-next-line:interface-name
+export interface FloatArray {
+    length: number
+    [index: number]: number
+    slice(startIndex: number): FloatArray;
+}
+
+export interface IFloatArrayConstructor {
+    new (count: number): FloatArray
 }

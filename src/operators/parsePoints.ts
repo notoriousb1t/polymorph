@@ -1,6 +1,6 @@
 import { _, Z, T, Q, S, C, V, H } from '../constants'
 import { coalesce } from '../utilities/coalesce'
-import { IParseContext } from '../types'
+import { IParseContext, FloatArray } from '../types'
 import { raiseError } from '../utilities/errors'
 import { quadraticRatio } from '../utilities/math';
 
@@ -114,7 +114,7 @@ function addSegment(ctx: IParseContext, x: number, y: number): void {
     ctx.x = x
     ctx.y = y
 
-    const p: number[] = [x, y]
+    const p = [x, y]
     ctx.s.push(p)
     ctx.p = p
 }
@@ -199,7 +199,7 @@ function parseCommand(str: string, i: number): string | number {
  * Returns an [] with cursor position + polybezier [mx, my, ...[x1, y1, x2, y2, dx, dy] ]
  * @param d string to parse
  */
-export function parsePoints(d: string): number[][] {
+export function parsePoints(d: string): FloatArray[] {
     // create parser context
     const ctx: IParseContext = {
         x: 0,

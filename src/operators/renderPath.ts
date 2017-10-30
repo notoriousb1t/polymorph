@@ -1,18 +1,19 @@
 import { M, C } from '../constants'
 import { isString } from '../utilities/inspect';
 import { floor } from '../utilities/math';
+import { FloatArray } from '../types';
 
 /**
  * Converts poly-bezier data back to SVG Path data.
  * @param ns poly-bezier data
  */
-export function renderPath(ns: number[][] | string): string {
+export function renderPath(ns: FloatArray[] | string): string {
     if (isString(ns)) {
         return ns as string
     }
     const parts: string[] = []
     for (let i = 0; i < ns.length; i++) {
-        const n = ns[i] as number[]
+        const n = ns[i] as FloatArray
         parts.push(M, formatNumber(n[0]), formatNumber(n[1]), C)
         for (let f = 2; f < n.length; f++) {
             parts.push(formatNumber(n[f]))

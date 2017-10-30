@@ -1,5 +1,6 @@
 import { IPathSegment } from '../types';
 import { fillObject } from '../utilities/objects';
+import { createNumberArray } from '../utilities/createNumberArray';
 
 
 export function fillSegments(larger: IPathSegment[], smaller: IPathSegment[]): void {
@@ -15,7 +16,7 @@ export function fillSegments(larger: IPathSegment[], smaller: IPathSegment[]): v
 
   for (let i = smallLen; i < largeLen; i++) {
       const l = larger[i]
-      const d: number[] = Array(l.d.length)
+      const d = createNumberArray(l.d.length)
       for (let k = 0; k < l.d.length; k += 2) {
           d[k] = l.ox
           d[k + 1] = l.oy

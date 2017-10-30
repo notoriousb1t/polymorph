@@ -34,6 +34,7 @@ var abs = math.abs;
 var min = math.min;
 var max = math.max;
 var floor = math.floor;
+var round = math.round;
 var sqrt = math.sqrt;
 var quadraticRatio = 2.0 / 3;
 var EPSILON = Math.pow(2, -52);
@@ -60,10 +61,27 @@ function raiseError() {
     throw new Error(Array.prototype.join.call(arguments, ' '));
 }
 
+var userAgent = typeof window !== 'undefined' && window.navigator.userAgent;
+var isEdge = /(MSIE |Trident\/|Edge\/)/i.test(userAgent);
+
+var arrayConstructor = isEdge ? Array : Float32Array;
+function createNumberArray(n) {
+    return new arrayConstructor(n);
+}
+
 function reversePoints(s) {
-    var d = s.slice(-2);
+    var d = createNumberArray(s.length);
+    var slen = s.length;
+    d[0] = s[slen - 2];
+    d[1] = s[slen - 1];
+    var k = 1;
     for (var i = s.length - 3; i > -1; i -= 6) {
-        d.push(s[i - 1], s[i], s[i - 3], s[i - 2], s[i - 5], s[i - 4]);
+        d[++k] = s[i - 1];
+        d[++k] = s[i];
+        d[++k] = s[i - 3];
+        d[++k] = s[i - 2];
+        d[++k] = s[i - 5];
+        d[++k] = s[i - 4];
     }
     return d;
 }
@@ -86,7 +104,7 @@ function fillSegments(larger, smaller) {
     smaller.length = largeLen;
     for (var i = smallLen; i < largeLen; i++) {
         var l = larger[i];
-        var d = Array(l.d.length);
+        var d = createNumberArray(l.d.length);
         for (var k = 0; k < l.d.length; k += 2) {
             d[k] = l.ox;
             d[k + 1] = l.oy;
@@ -120,37 +138,66 @@ function normalizePoints(x, y, ns) {
     if (ns[len - 2] !== ns[0] || ns[len - 1] !== ns[1]) {
         return;
     }
-    ns.splice(0, 2);
-    len = ns.length;
+    var buffer = ns.slice(2);
+    len = buffer.length;
     var index, minAmount;
     for (var i = 0; i < len; i += 6) {
-        var next = distance(x, y, ns[i], ns[i + 1]);
+        var next = distance(x, y, buffer[i], buffer[i + 1]);
         if (minAmount === _ || next < minAmount) {
             minAmount = next;
             index = i;
         }
     }
-    rotatePoints(ns, index);
-    ns.splice(0, 0, ns[len - 2], ns[len - 1]);
+    rotatePoints(buffer, index);
+    ns[0] = buffer[len - 2];
+    ns[1] = buffer[len - 1];
+    for (var i = 0; i < buffer.length; i++) {
+        ns[i + 2] = buffer[i];
+    }
 }
 
-function fillPoints(larger, smaller) {
-    if (larger.length < smaller.length) {
-        return fillPoints(smaller, larger);
+function fillPoints(matrix, addPoints) {
+    var ilen = matrix[0].length;
+    for (var i = 0; i < ilen; i++) {
+        var left = matrix[0][i];
+        var right = matrix[1][i];
+        var totalLength = max(left.length + addPoints, right.length + addPoints);
+        matrix[0][i] = fillSubpath(left, totalLength);
+        matrix[1][i] = fillSubpath(right, totalLength);
     }
-    var numberInSmaller = (smaller.length - 2) / 6;
-    var numberInLarger = (larger.length - 2) / 6;
-    var numberToInsert = numberInLarger - numberInSmaller;
-    if (numberToInsert === 0) {
-        return;
+}
+function fillSubpath(ns, totalLength) {
+    var result = createNumberArray(totalLength);
+    var slen = ns.length;
+    var totalNeeded = totalLength - slen;
+    var ratio = totalNeeded / slen;
+    var remaining = totalNeeded;
+    result[0] = ns[0];
+    result[1] = ns[1];
+    var k = 1, j = 1;
+    while (j < totalLength - 1) {
+        result[j + 1] = ns[k + 1];
+        result[j + 2] = ns[k + 2];
+        result[j + 3] = ns[k + 3];
+        result[j + 4] = ns[k + 4];
+        var dx = result[j + 5] = ns[k + 5];
+        var dy = result[j + 6] = ns[k + 6];
+        j += 6;
+        k += 6;
+        if (remaining) {
+            var total = round(ratio);
+            if (k === slen - 1) {
+                total = totalLength - j;
+            }
+            for (var i = 0; i < total && remaining > 0; i++) {
+                result[j + 1] = result[j + 3] = result[j + 5] = dx;
+                result[j + 2] = result[j + 4] = result[j + 6] = dy;
+                j += 6;
+                remaining -= 6;
+            }
+        }
     }
-    var dist = numberToInsert / numberInLarger;
-    for (var i = 0; i < numberToInsert; i++) {
-        var index = min(floor(dist * i * 6) + 2, smaller.length);
-        var x = smaller[index - 2];
-        var y = smaller[index - 1];
-        smaller.splice(index, 0, x, y, x, y, x, y);
-    }
+    return result;
 }
 
 function ctns(a, b1, b2) {
@@ -180,8 +227,7 @@ function normalizePaths(left, right, options) {
             raiseError('fillStrategy:preserve requires equal lengths');
         }
     }
-    var lp = leftPath.map(toPoints);
-    var rp = rightPath.map(toPoints);
+    var matrix = [leftPath.map(toPoints), rightPath.map(toPoints)];
     if (options.wind !== PRESERVE) {
         var goClockwise = options.wind === CLOCKWISE;
         for (var i = 0; i < leftPath.length; i++) {
@@ -196,17 +242,15 @@ function normalizePaths(left, right, options) {
     if (!!options.align) {
         for (var i = 0; i < leftPath.length; i++) {
             var ls = leftPath[i];
-            normalizePoints(ls.x, ls.y, lp[i]);
+            normalizePoints(ls.x, ls.y, matrix[0][i]);
             var rs = rightPath[i];
-            normalizePoints(rs.x, rs.y, rp[i]);
+            normalizePoints(rs.x, rs.y, matrix[1][i]);
         }
     }
     if (options.fillStrategy === INSERT) {
-        for (var i = 0; i < leftPath.length; i++) {
-            fillPoints(lp[i], rp[i]);
-        }
+        fillPoints(matrix, options.addPoints * 6);
     }
-    return [lp, rp];
+    return matrix;
 }
 function toPoints(p) {
     return p.d;
@@ -231,6 +275,7 @@ function isClockwise(path) {
 }
 
 var defaultOptions = {
+    addPoints: 5,
     align: true,
     fillStrategy: 'insert',
     wind: 'clockwise'
@@ -270,7 +315,7 @@ function getPathInterpolator(left, right, options) {
 }
 function mixPoints(a, b, o) {
     var alen = a.length;
-    var results = Array(alen);
+    var results = createNumberArray(alen);
     for (var i = 0; i < alen; i++) {
         results[i] = a[i] + (b[i] - a[i]) * o;
     }

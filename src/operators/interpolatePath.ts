@@ -1,14 +1,16 @@
-import { IPath, IRenderer, InterpolateOptions } from '../types'
+import { IPath, IRenderer, InterpolateOptions, FloatArray } from '../types'
 import { renderPath } from './renderPath'
 import { EPSILON, abs, floor, min } from '../utilities/math'
 import { raiseError } from '../utilities/errors'
 import { normalizePaths } from './normalizePaths'
-import { fillObject } from '../utilities/objects';
+import { fillObject } from '../utilities/objects'
+import { createNumberArray } from '../utilities/createNumberArray'
 
 const defaultOptions: InterpolateOptions = {
-  align: true,
-  fillStrategy: 'insert',
-  wind: 'clockwise'
+    addPoints: 5,
+    align: true,
+    fillStrategy: 'insert',
+    wind: 'clockwise'
 }
 
 /**
@@ -25,7 +27,7 @@ export function interpolatePath(paths: IPath[], options: InterpolateOptions): (o
     }
 
     const hlen = paths.length - 1
-    const items: IRenderer<number[][] | string>[] = Array(hlen)
+    const items: IRenderer<FloatArray[] | string>[] = Array(hlen)
     for (let h = 0; h < hlen; h++) {
         items[h] = getPathInterpolator(paths[h], paths[h + 1], options)
     }
@@ -37,7 +39,11 @@ export function interpolatePath(paths: IPath[], options: InterpolateOptions): (o
     }
 }
 
-function getPathInterpolator(left: IPath, right: IPath, options: InterpolateOptions): IRenderer<number[][] | string> {
+function getPathInterpolator(
+    left: IPath,
+    right: IPath,
+    options: InterpolateOptions
+): IRenderer<FloatArray[] | string> {
     const matrix = normalizePaths(left, right, options)
     const n = matrix[0].length
     return (offset: number) => {
@@ -48,7 +54,7 @@ function getPathInterpolator(left: IPath, right: IPath, options: InterpolateOpti
             return right.path
         }
 
-        const results: number[][] = Array(n)
+        const results: FloatArray[] = Array(n)
         for (let h = 0; h < n; h++) {
             results[h] = mixPoints(matrix[0][h], matrix[1][h], offset)
         }
@@ -56,9 +62,9 @@ function getPathInterpolator(left: IPath, right: IPath, options: InterpolateOpti
     }
 }
 
-export function mixPoints(a: number[], b: number[], o: number): number[] {
+export function mixPoints(a: FloatArray, b: FloatArray, o: number): FloatArray {
     const alen = a.length
-    const results: number[] = Array(alen)
+    const results = createNumberArray(alen)
     for (let i = 0; i < alen; i++) {
         results[i] = a[i] + (b[i] - a[i]) * o
     }

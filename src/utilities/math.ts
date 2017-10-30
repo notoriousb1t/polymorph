@@ -3,6 +3,7 @@ export const abs = math.abs
 export const min = math.min
 export const max = math.max
 export const floor = math.floor
+export const round = math.round
 export const sqrt = math.sqrt
 
 /**

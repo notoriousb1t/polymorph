@@ -1,17 +1,17 @@
-import { IPathSegment, IPath, InterpolateOptions } from '../types'
+import { IPathSegment, IPath, InterpolateOptions, FloatArray, Matrix } from '../types'
 import { reversePoints } from './reversePoints'
 import { fillSegments } from './fillSegments'
 import { normalizePoints } from './normalizePoints'
 import { fillPoints } from './fillPoints'
 import { intersects } from '../utilities/intersects'
 import { INSERT, PRESERVE, CLOCKWISE } from '../constants'
-import { raiseError } from '../utilities/errors';
+import { raiseError } from '../utilities/errors'
 
 function sizeDesc(a: IPathSegment, b: IPathSegment): number {
     return b.p - a.p
 }
 
-export function normalizePaths(left: IPath, right: IPath, options: InterpolateOptions): [number[][], number[][]] {
+export function normalizePaths(left: IPath, right: IPath, options: InterpolateOptions): FloatArray[][] {
     // sort segments by perimeter size (more or less area)
     let leftPath = left.data.slice().sort(sizeDesc)
     let rightPath = right.data.slice().sort(sizeDesc)
@@ -25,8 +25,7 @@ export function normalizePaths(left: IPath, right: IPath, options: InterpolateOp
         }
     }
 
-    let lp = leftPath.map(toPoints)
-    let rp = rightPath.map(toPoints)
+    const matrix: Matrix = [leftPath.map(toPoints), rightPath.map(toPoints)]
 
     if (options.wind !== PRESERVE) {
         const goClockwise = options.wind === CLOCKWISE
@@ -44,22 +43,19 @@ export function normalizePaths(left: IPath, right: IPath, options: InterpolateOp
         // shift so both svg's are being drawn from relatively the same place
         for (let i = 0; i < leftPath.length; i++) {
             const ls = leftPath[i]
-            normalizePoints(ls.x, ls.y, lp[i])
+            normalizePoints(ls.x, ls.y, matrix[0][i])
             const rs = rightPath[i]
-            normalizePoints(rs.x, rs.y, rp[i])
+            normalizePoints(rs.x, rs.y, matrix[1][i])
         }
     }
 
     if (options.fillStrategy === INSERT) {
-        for (let i = 0; i < leftPath.length; i++) {
-            // ensure points in segments are equal length
-            fillPoints(lp[i], rp[i])
-        }
+        fillPoints(matrix, options.addPoints * 6)
     }
-    return [lp, rp]
+    return matrix
 }
 
-function toPoints(p: IPathSegment): number[] {
+function toPoints(p: IPathSegment): FloatArray {
     return p.d
 }
 

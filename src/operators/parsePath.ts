@@ -1,9 +1,9 @@
-import { IPathSegment, IPath } from '../types'
+import { IPathSegment, IPath, FloatArray } from '../types'
 import { parsePoints } from './parsePoints'
 import { min, max } from '../utilities/math'
 import { perimeterPoints } from './perimeterPoints'
 
-function createPathSegmentArray(points: number[]): IPathSegment {
+function createPathSegmentArray(points: FloatArray): IPathSegment {
     // get initial x,y from move command
     let xmin = points[0]
     let ymin = points[1]

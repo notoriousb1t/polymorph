@@ -1,11 +1,12 @@
 import { floor } from '../utilities/math';
 import { distance } from '../utilities/distance';
+import { FloatArray } from '../types';
 
 /**
  * Approximates the perimeter around a shape
  * @param pts
  */
-export function perimeterPoints(pts: number[]): number {
+export function perimeterPoints(pts: FloatArray): number {
   let n = pts.length
   let x2 = pts[n - 2]
   let y2 = pts[n - 1]
