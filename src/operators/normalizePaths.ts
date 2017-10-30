@@ -4,7 +4,7 @@ import { fillSegments } from './fillSegments'
 import { normalizePoints } from './normalizePoints'
 import { fillPoints } from './fillPoints'
 import { intersects } from '../utilities/intersects'
-import { INSERT, PRESERVE, CLOCKWISE } from '../constants'
+import { FILL, NONE, CLOCKWISE } from '../constants'
 import { raiseError } from '../utilities/errors'
 
 function sizeDesc(a: IPathSegment, b: IPathSegment): number {
@@ -13,21 +13,23 @@ function sizeDesc(a: IPathSegment, b: IPathSegment): number {
 
 export function normalizePaths(left: IPath, right: IPath, options: InterpolateOptions): FloatArray[][] {
     // sort segments by perimeter size (more or less area)
-    let leftPath = left.data.slice().sort(sizeDesc)
-    let rightPath = right.data.slice().sort(sizeDesc)
+    const leftPath = getSortedSegments(left)
+    const rightPath = getSortedSegments(right)
 
     if (leftPath.length !== rightPath.length) {
-        if (options.fillStrategy === INSERT) {
+        if (options.optimize === FILL) {
             // ensure there are an equal amount of segments
             fillSegments(leftPath, rightPath)
         } else {
-            raiseError('fillStrategy:preserve requires equal lengths')
+            raiseError('optimize:none requires equal lengths')
         }
     }
 
-    const matrix: Matrix = [leftPath.map(toPoints), rightPath.map(toPoints)]
+    const matrix = Array(2) as Matrix
+    matrix[0] = leftPath.map(toPoints)
+    matrix[1] = rightPath.map(toPoints)
 
-    if (options.wind !== PRESERVE) {
+    if (options.wind !== NONE) {
         const goClockwise = options.wind === CLOCKWISE
         for (let i = 0; i < leftPath.length; i++) {
             if (isClockwise(leftPath[i]) === goClockwise) {
@@ -39,20 +41,25 @@ export function normalizePaths(left: IPath, right: IPath, options: InterpolateOp
         }
     }
 
-    if (!!options.align) {
+    if (options.optimize !== NONE) {
         // shift so both svg's are being drawn from relatively the same place
         for (let i = 0; i < leftPath.length; i++) {
             const ls = leftPath[i]
-            normalizePoints(ls.x, ls.y, matrix[0][i])
             const rs = rightPath[i]
-            normalizePoints(rs.x, rs.y, matrix[1][i])
+
+            normalizePoints(ls.x + ls.w * options.origin.x, ls.y + ls.h * options.origin.y, matrix[0][i])
+            normalizePoints(rs.x + rs.w * options.origin.x, rs.y + rs.h * options.origin.y, matrix[1][i])
         }
     }
 
-    if (options.fillStrategy === INSERT) {
+    if (options.optimize === FILL) {
         fillPoints(matrix, options.addPoints * 6)
     }
     return matrix
+}
+
+function getSortedSegments(path: IPath): IPathSegment[] {
+    return path.data.slice().sort(sizeDesc)
 }
 
 function toPoints(p: IPathSegment): FloatArray {

@@ -1,9 +1,10 @@
 import { FloatArray } from '../types'
+import { createNumberArray } from '../utilities/createNumberArray';
 
 export function rotatePoints(ns: FloatArray, count: number): void {
     const len = ns.length
     const rightLen = len - count
-    const buffer = Array(count)
+    const buffer = createNumberArray(count)
     let i: number
 
     // write to a temporary buffer

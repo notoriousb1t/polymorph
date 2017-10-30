@@ -9,6 +9,8 @@ export const V = 'V',
     Q = 'Q',
     T = 'T'
 
-export const INSERT = 'insert' as 'insert'
-export const PRESERVE = 'preserve' as 'preserve'
+export const EMPTY = ' '
+
+export const FILL = 'fill' as 'fill'
+export const NONE = 'none' as 'none'
 export const CLOCKWISE = 'clockwise' as 'clockwise'

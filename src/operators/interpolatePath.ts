@@ -1,16 +1,18 @@
 import { IPath, IRenderer, InterpolateOptions, FloatArray } from '../types'
 import { renderPath } from './renderPath'
-import { EPSILON, abs, floor, min } from '../utilities/math'
+import { EPSILON, abs, floor, min, round } from '../utilities/math'
 import { raiseError } from '../utilities/errors'
 import { normalizePaths } from './normalizePaths'
 import { fillObject } from '../utilities/objects'
 import { createNumberArray } from '../utilities/createNumberArray'
+import { CLOCKWISE, FILL } from '../constants'
 
 const defaultOptions: InterpolateOptions = {
-    addPoints: 5,
-    align: true,
-    fillStrategy: 'insert',
-    wind: 'clockwise'
+    addPoints: 0,
+    optimize: FILL,
+    origin: { x: 0, y: 0 },
+    precision: 0,
+    wind: CLOCKWISE
 }
 
 /**
@@ -32,18 +34,17 @@ export function interpolatePath(paths: IPath[], options: InterpolateOptions): (o
         items[h] = getPathInterpolator(paths[h], paths[h + 1], options)
     }
 
+    // create formatter for the precision
+    const formatter = !options.precision ? round : (n: number) => n.toFixed(options.precision)
+
     return (offset: number): string => {
         const d = hlen * offset
         const flr = min(floor(d), hlen - 1)
-        return renderPath(items[flr]((d - flr) / (flr + 1)))
+        return renderPath(items[flr]((d - flr) / (flr + 1)), formatter)
     }
 }
 
-function getPathInterpolator(
-    left: IPath,
-    right: IPath,
-    options: InterpolateOptions
-): IRenderer<FloatArray[] | string> {
+function getPathInterpolator(left: IPath, right: IPath, options: InterpolateOptions): IRenderer<FloatArray[] | string> {
     const matrix = normalizePaths(left, right, options)
     const n = matrix[0].length
     return (offset: number) => {

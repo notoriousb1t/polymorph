@@ -49,7 +49,7 @@ describe('parsePath()', () => {
     })
     it('parses s with multiple argument sets', () => {
         assert.deepEqual(
-            renderPath(parsePoints('M 10 10 s 10 40 25 25 10 40 25 25')),
+            renderPath(parsePoints('M 10 10 s 10 40 25 25 10 40 25 25'), Math.round),
             'M 10 10 C 10 10 20 50 35 35 50 20 45 75 60 60'
         )
     })
@@ -62,50 +62,56 @@ describe('parsePath()', () => {
     })
     it('parses S with multiple argument sets', () => {
         assert.deepEqual(
-            renderPath(parsePoints('M 10 10 S 20 50 35 35 45 75 60 60')),
+            renderPath(parsePoints('M 10 10 S 20 50 35 35 45 75 60 60'), Math.round),
             'M 10 10 C 10 10 20 50 35 35 50 20 45 75 60 60'
         )
     })
     it('parses c followed by s', () => {
         assert.deepEqual(
-            renderPath(parsePoints('M 10 10 c10 10 10 40 25 25 s10 40 25 25')),
+            renderPath(parsePoints('M 10 10 c10 10 10 40 25 25 s10 40 25 25'), Math.round),
             'M 10 10 C 20 20 20 50 35 35 50 20 45 75 60 60'
         )
     })
     it('parses q', () => {
-        assert.deepEqual(renderPath(parsePoints('M 10 10 q 10 5 15 25')), 'M 10 10 C 16.66 13.33 21.66 21.66 25 35')
+        assert.deepEqual(
+            renderPath(parsePoints('M 10 10 q 10 5 15 25'), Math.round),
+            'M 10 10 C 17 13 22 22 25 35'
+        )
     })
     it('parses Q', () => {
-        assert.deepEqual(renderPath(parsePoints('M 10 10 Q 20 15 25 35')), 'M 10 10 C 16.66 13.33 21.66 21.66 25 35')
+        assert.deepEqual(
+            renderPath(parsePoints('M 10 10 Q 20 15 25 35'), Math.round),
+            'M 10 10 C 17 13 22 22 25 35'
+        )
     })
     it('parses t', () => {
-        assert.deepEqual(renderPath(parsePoints('M 10 10 t 15 25')), 'M 10 10 C 10 10 10 10 25 35')
+        assert.deepEqual(renderPath(parsePoints('M 10 10 t 15 25'), Math.round), 'M 10 10 C 10 10 10 10 25 35')
     })
     it('parses t + t', () => {
         assert.deepEqual(
-            renderPath(parsePoints('M 10 10 t 15 25 t 25 15')),
-            'M 10 10 C 10 10 10 10 25 35 35 51.66 43.33 56.66 50 50'
+            renderPath(parsePoints('M 10 10 t 15 25 t 25 15'), Math.round),
+            'M 10 10 C 10 10 10 10 25 35 35 52 43 57 50 50'
         )
     })
     it('parses t with multiple argument sets', () => {
         assert.deepEqual(
-            renderPath(parsePoints('M 10 10 t 15 25 25 15')),
-            'M 10 10 C 10 10 10 10 25 35 35 51.66 43.33 56.66 50 50'
+            renderPath(parsePoints('M 10 10 t 15 25 25 15'), Math.round),
+            'M 10 10 C 10 10 10 10 25 35 35 52 43 57 50 50'
         )
     })
     it('parses T', () => {
-        assert.deepEqual(renderPath(parsePoints('M 10 10 T 25 35')), 'M 10 10 C 10 10 10 10 25 35')
+        assert.deepEqual(renderPath(parsePoints('M 10 10 T 25 35'), Math.round), 'M 10 10 C 10 10 10 10 25 35')
     })
     it('parses T + T', () => {
         assert.deepEqual(
-            renderPath(parsePoints('M 10 10 T 25 35 T 70 50')),
-            'M 10 10 C 10 10 10 10 25 35 35 51.66 50 56.66 70 50'
+            renderPath(parsePoints('M 10 10 T 25 35 T 70 50'), Math.round),
+            'M 10 10 C 10 10 10 10 25 35 35 52 50 57 70 50'
         )
     })
     it('parses T with multiple argument sets', () => {
         assert.deepEqual(
-            renderPath(parsePoints('M 10 10 T 25 35 70 50')),
-            'M 10 10 C 10 10 10 10 25 35 35 51.66 50 56.66 70 50'
+            renderPath(parsePoints('M 10 10 T 25 35 70 50'), Math.round),
+            'M 10 10 C 10 10 10 10 25 35 35 52 50 57 70 50'
         )
     })
 

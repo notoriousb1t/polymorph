@@ -25,9 +25,52 @@ var C = 'C';
 var S = 'S';
 var Q = 'Q';
 var T = 'T';
-var INSERT = 'insert';
-var PRESERVE = 'preserve';
+var EMPTY = ' ';
+var FILL = 'fill';
+var NONE = 'none';
 var CLOCKWISE = 'clockwise';
+
+function renderPath(ns, formatter) {
+    if (isString(ns)) {
+        return ns;
+    }
+    var result = '';
+    for (var i = 0; i < ns.length; i++) {
+        var n = ns[i];
+        var cx = n[0];
+        var cy = n[1];
+        result += M + EMPTY + formatter(cx) + EMPTY + formatter(cy) + EMPTY + C;
+        for (var f = 2; f < n.length; f += 6) {
+            var x1 = n[f];
+            var y1 = n[f + 1];
+            var x2 = n[f + 2];
+            var y2 = n[f + 3];
+            var dx = n[f + 4];
+            var dy = n[f + 5];
+            var sameX = cx === dx && cx === x1 && cx === x2;
+            var sameY = cy === dy && cy === y1 && cy === y2;
+            if (sameX && sameY) {
+                continue;
+            }
+            cx = dx;
+            cy = dy;
+            result +=
+                EMPTY +
+                    formatter(x1) +
+                    EMPTY +
+                    formatter(y1) +
+                    EMPTY +
+                    formatter(x2) +
+                    EMPTY +
+                    formatter(y2) +
+                    EMPTY +
+                    formatter(dx) +
+                    EMPTY +
+                    formatter(dy);
+        }
+    }
+    return result;
+}
 
 var math = Math;
 var abs = math.abs;
@@ -36,29 +79,12 @@ var max = math.max;
 var floor = math.floor;
 var round = math.round;
 var sqrt = math.sqrt;
+var pow = math.pow;
 var quadraticRatio = 2.0 / 3;
-var EPSILON = Math.pow(2, -52);
-
-function renderPath(ns) {
-    if (isString(ns)) {
-        return ns;
-    }
-    var parts = [];
-    for (var i = 0; i < ns.length; i++) {
-        var n = ns[i];
-        parts.push(M, formatNumber(n[0]), formatNumber(n[1]), C);
-        for (var f = 2; f < n.length; f++) {
-            parts.push(formatNumber(n[f]));
-        }
-    }
-    return parts.join(' ');
-}
-function formatNumber(n) {
-    return (floor(n * 100) / 100).toString();
-}
+var EPSILON = pow(2, -52);
 
 function raiseError() {
-    throw new Error(Array.prototype.join.call(arguments, ' '));
+    throw new Error(Array.prototype.join.call(arguments, EMPTY));
 }
 
 var userAgent = typeof window !== 'undefined' && window.navigator.userAgent;
@@ -116,7 +142,7 @@ function fillSegments(larger, smaller) {
 function rotatePoints(ns, count) {
     var len = ns.length;
     var rightLen = len - count;
-    var buffer = Array(count);
+    var buffer = createNumberArray(count);
     var i;
     for (i = 0; i < count; i++) {
         buffer[i] = ns[i];
@@ -217,18 +243,20 @@ function sizeDesc(a, b) {
     return b.p - a.p;
 }
 function normalizePaths(left, right, options) {
-    var leftPath = left.data.slice().sort(sizeDesc);
-    var rightPath = right.data.slice().sort(sizeDesc);
+    var leftPath = getSortedSegments(left);
+    var rightPath = getSortedSegments(right);
     if (leftPath.length !== rightPath.length) {
-        if (options.fillStrategy === INSERT) {
+        if (options.optimize === FILL) {
             fillSegments(leftPath, rightPath);
         }
         else {
-            raiseError('fillStrategy:preserve requires equal lengths');
+            raiseError('optimize:none requires equal lengths');
         }
     }
-    var matrix = [leftPath.map(toPoints), rightPath.map(toPoints)];
-    if (options.wind !== PRESERVE) {
+    var matrix = Array(2);
+    matrix[0] = leftPath.map(toPoints);
+    matrix[1] = rightPath.map(toPoints);
+    if (options.wind !== NONE) {
         var goClockwise = options.wind === CLOCKWISE;
         for (var i = 0; i < leftPath.length; i++) {
             if (isClockwise(leftPath[i]) === goClockwise) {
@@ -239,18 +267,21 @@ function normalizePaths(left, right, options) {
             }
         }
     }
-    if (!!options.align) {
+    if (options.optimize !== NONE) {
         for (var i = 0; i < leftPath.length; i++) {
             var ls = leftPath[i];
-            normalizePoints(ls.x, ls.y, matrix[0][i]);
             var rs = rightPath[i];
-            normalizePoints(rs.x, rs.y, matrix[1][i]);
+            normalizePoints(ls.x + ls.w * options.origin.x, ls.y + ls.h * options.origin.y, matrix[0][i]);
+            normalizePoints(rs.x + rs.w * options.origin.x, rs.y + rs.h * options.origin.y, matrix[1][i]);
         }
     }
-    if (options.fillStrategy === INSERT) {
+    if (options.optimize === FILL) {
         fillPoints(matrix, options.addPoints * 6);
     }
     return matrix;
+}
+function getSortedSegments(path) {
+    return path.data.slice().sort(sizeDesc);
 }
 function toPoints(p) {
     return p.d;
@@ -275,10 +306,11 @@ function isClockwise(path) {
 }
 
 var defaultOptions = {
-    addPoints: 5,
-    align: true,
-    fillStrategy: 'insert',
-    wind: 'clockwise'
+    addPoints: 0,
+    optimize: FILL,
+    origin: { x: 0, y: 0 },
+    precision: 0,
+    wind: CLOCKWISE
 };
 function interpolatePath(paths, options) {
     options = fillObject(options, defaultOptions);
@@ -290,10 +322,11 @@ function interpolatePath(paths, options) {
     for (var h = 0; h < hlen; h++) {
         items[h] = getPathInterpolator(paths[h], paths[h + 1], options);
     }
+    var formatter = !options.precision ? round : function (n) { return n.toFixed(options.precision); };
     return function (offset) {
         var d = hlen * offset;
         var flr = min(floor(d), hlen - 1);
-        return renderPath(items[flr]((d - flr) / (flr + 1)));
+        return renderPath(items[flr]((d - flr) / (flr + 1)), formatter);
     };
 }
 function getPathInterpolator(left, right, options) {
@@ -443,7 +476,7 @@ function parseSegments(d) {
         .map(parseSegment);
 }
 function parseSegment(s2) {
-    return s2.split(' ').map(parseCommand);
+    return s2.split(EMPTY).map(parseCommand);
 }
 function parseCommand(str, i) {
     return i === 0 ? str : +str;

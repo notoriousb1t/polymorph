@@ -1,4 +1,5 @@
 export type Matrix = [FloatArray[], FloatArray[]]
+export type Func<T1, T2> = (input: T1) => T2;
 
 export interface IRenderer<T> {
     (offset: number): T
@@ -95,26 +96,36 @@ export interface IParseContext {
 
 export interface InterpolateOptions {
     /**
-     * When true, this will move the starting position of all closed shapes to the upper left hand corner of the bounding box.
+     * Origin of the shape
      */
-    align?: boolean
+    origin?: { x: number, y: number }
     /**
      * The wind (like a clock) direction of the path.
-     *  'preserve' will leave the path as is.  'clockwise' will change all subpaths to clockwise.  'counter-clockwise' will change all
-     *  paths to counter-clockwise. The default value is 'clockwise'.
+     *  - none: will leave the path as is.
+     *  - clockwise: (default) will change all subpaths to draw clockwise.
+     *  - counter-clockwise: will change all paths to draw counter-clockwise.
      */
-    wind?: 'preserve' | 'clockwise' | 'counter-clockwise'
+    wind?: 'none' | 'clockwise' | 'counter-clockwise'
     /**
-     * Determines what strategy should be used for filling additional subpaths and when the number of points do not line up.
-     * 'preserve' assumes everything lines up, 'insert' will attempt to correct this by inserting empty subpaths and net0 points.
-     * The default value is 'insert'
+     * Determines the strategy to optimize two paths for each other.
+     *
+     * - none: use when both shapes have an equal number of subpaths and points
+     * - fill: (default) creates subpaths and adds points to align both paths
      */
-    fillStrategy?: 'preserve' | 'insert'
+    optimize?: 'none' | 'fill'
 
     /**
-     * Number of points to add to each sub-path.  This can be used for smoothing out shapes.  The default is 5
+     * Number of points to add when using optimize: fill.  The default is 0.
      */
     addPoints?: number
+
+    /**
+     * Number of decimal places to use when rendering 'd' strings.
+     * For most animations, 0 is recommended.  If very small shapes are being used, this can be increased to
+     * improve smoothness at the cost of (browser) rendering speed
+     * The default is 0 (no decimal places) and also the recommended value.
+     */
+    precision?: number
 }
 
 // tslint:disable-next-line:interface-name

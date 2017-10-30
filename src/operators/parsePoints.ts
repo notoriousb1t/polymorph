@@ -1,4 +1,4 @@
-import { _, Z, T, Q, S, C, V, H } from '../constants'
+import { _, Z, T, Q, S, C, V, H, EMPTY } from '../constants'
 import { coalesce } from '../utilities/coalesce'
 import { IParseContext, FloatArray } from '../types'
 import { raiseError } from '../utilities/errors'
@@ -187,7 +187,7 @@ function parseSegments(d: string): (string | number)[][] {
 
 function parseSegment(s2: string): (string | number)[] {
     // split command segment into command + args
-    return s2.split(' ').map(parseCommand)
+    return s2.split(EMPTY).map(parseCommand)
 }
 
 function parseCommand(str: string, i: number): string | number {
