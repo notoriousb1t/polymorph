@@ -28,7 +28,6 @@ var T = 'T';
 var EMPTY = ' ';
 var FILL = 'fill';
 var NONE = 'none';
-var CLOCKWISE = 'clockwise';
 
 function renderPath(ns, formatter) {
     if (isString(ns)) {
@@ -87,31 +86,6 @@ function raiseError() {
     throw new Error(Array.prototype.join.call(arguments, EMPTY));
 }
 
-var userAgent = typeof window !== 'undefined' && window.navigator.userAgent;
-var isEdge = /(MSIE |Trident\/|Edge\/)/i.test(userAgent);
-
-var arrayConstructor = isEdge ? Array : Float32Array;
-function createNumberArray(n) {
-    return new arrayConstructor(n);
-}
-
-function reversePoints(s) {
-    var d = createNumberArray(s.length);
-    var slen = s.length;
-    d[0] = s[slen - 2];
-    d[1] = s[slen - 1];
-    var k = 1;
-    for (var i = s.length - 3; i > -1; i -= 6) {
-        d[++k] = s[i - 1];
-        d[++k] = s[i];
-        d[++k] = s[i - 3];
-        d[++k] = s[i - 2];
-        d[++k] = s[i - 5];
-        d[++k] = s[i - 4];
-    }
-    return d;
-}
-
 function fillObject(dest, src) {
     for (var key in src) {
         if (!dest.hasOwnProperty(key)) {
@@ -121,19 +95,27 @@ function fillObject(dest, src) {
     return dest;
 }
 
-function fillSegments(larger, smaller) {
+var userAgent = typeof window !== 'undefined' && window.navigator.userAgent;
+var isEdge = /(MSIE |Trident\/|Edge\/)/i.test(userAgent);
+
+var arrayConstructor = isEdge ? Array : Float32Array;
+function createNumberArray(n) {
+    return new arrayConstructor(n);
+}
+
+function fillSegments(larger, smaller, origin) {
     var largeLen = larger.length;
     var smallLen = smaller.length;
     if (largeLen < smallLen) {
-        return fillSegments(smaller, larger);
+        return fillSegments(smaller, larger, origin);
     }
     smaller.length = largeLen;
     for (var i = smallLen; i < largeLen; i++) {
         var l = larger[i];
         var d = createNumberArray(l.d.length);
         for (var k = 0; k < l.d.length; k += 2) {
-            d[k] = l.ox;
-            d[k + 1] = l.oy;
+            d[k] = l.x + (l.w * origin.x);
+            d[k + 1] = l.y + (l.y * origin.y);
         }
         smaller[i] = fillObject({ d: d }, l);
     }
@@ -226,19 +208,6 @@ function fillSubpath(ns, totalLength) {
     return result;
 }
 
-function ctns(a, b1, b2) {
-    return (a >= b1 && a <= b2) || (a >= b2 && a <= b1);
-}
-function intersects(x1, y1, x2, y2, x3, y3, x4, y4) {
-    var d = (x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4);
-    if (d === 0) {
-        return false;
-    }
-    var x = (x1 * y2 - y1 * x2) * (x3 - x4) - (x1 - x2) * (x3 * y4 - y3 * x4) / d;
-    var y = (x1 * y2 - y1 * x2) * (y3 - y4) - (y1 - y2) * (x3 * y4 - y3 * x4) / d;
-    return ctns(x, x1, x2) && ctns(y, y1, y2) && ctns(x, x3, x4) && ctns(y, y3, y4);
-}
-
 function sizeDesc(a, b) {
     return b.p - a.p;
 }
@@ -247,7 +216,7 @@ function normalizePaths(left, right, options) {
     var rightPath = getSortedSegments(right);
     if (leftPath.length !== rightPath.length) {
         if (options.optimize === FILL) {
-            fillSegments(leftPath, rightPath);
+            fillSegments(leftPath, rightPath, options.origin);
         }
         else {
             raiseError('optimize:none requires equal lengths');
@@ -256,17 +225,6 @@ function normalizePaths(left, right, options) {
     var matrix = Array(2);
     matrix[0] = leftPath.map(toPoints);
     matrix[1] = rightPath.map(toPoints);
-    if (options.wind !== NONE) {
-        var goClockwise = options.wind === CLOCKWISE;
-        for (var i = 0; i < leftPath.length; i++) {
-            if (isClockwise(leftPath[i]) === goClockwise) {
-                leftPath[i].d = reversePoints(leftPath[i].d);
-            }
-            if (isClockwise(rightPath[i]) === goClockwise) {
-                rightPath[i].d = reversePoints(rightPath[i].d);
-            }
-        }
-    }
     if (options.optimize !== NONE) {
         for (var i = 0; i < leftPath.length; i++) {
             var ls = leftPath[i];
@@ -286,31 +244,12 @@ function getSortedSegments(path) {
 function toPoints(p) {
     return p.d;
 }
-function isClockwise(path) {
-    var pts = path.d;
-    var n = pts.length;
-    var x4 = path.x + path.w;
-    var y4 = path.y + path.h;
-    var isUpper = path.ox - path.x > 0;
-    var x1 = pts[n - 2];
-    var y1 = pts[n - 1];
-    for (var i = 0; i < n; i += 6) {
-        var x2 = pts[i];
-        var y2 = pts[i + 1];
-        if (intersects(x1, y1, x2, y2, path.x, path.y, x4, y4)) {
-            var forward = x2 - x1 > 0;
-            return (forward && isUpper) || (!forward && !isUpper);
-        }
-    }
-    return false;
-}
 
 var defaultOptions = {
     addPoints: 0,
     optimize: FILL,
     origin: { x: 0, y: 0 },
-    precision: 0,
-    wind: CLOCKWISE
+    precision: 0
 };
 function interpolatePath(paths, options) {
     options = fillObject(options, defaultOptions);
@@ -539,16 +478,12 @@ function createPathSegmentArray(points) {
         ymin = min(ymin, y);
         ymax = max(ymax, y);
     }
-    var width = xmax - xmin;
-    var height = ymax - ymin;
     return {
         d: points,
         x: xmin,
         y: ymin,
-        ox: width / 2 + xmin,
-        oy: height / 2 + ymin,
-        w: width,
-        h: height,
+        w: xmax - xmin,
+        h: ymax - ymin,
         p: perimeterPoints(points)
     };
 }

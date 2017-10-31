@@ -5,14 +5,13 @@ import { raiseError } from '../utilities/errors'
 import { normalizePaths } from './normalizePaths'
 import { fillObject } from '../utilities/objects'
 import { createNumberArray } from '../utilities/createNumberArray'
-import { CLOCKWISE, FILL } from '../constants'
+import { FILL } from '../constants'
 
 const defaultOptions: InterpolateOptions = {
     addPoints: 0,
     optimize: FILL,
     origin: { x: 0, y: 0 },
-    precision: 0,
-    wind: CLOCKWISE
+    precision: 0
 }
 
 /**

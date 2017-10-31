@@ -20,17 +20,12 @@ function createPathSegmentArray(points: FloatArray): IPathSegment {
         ymax = max(ymax, y)
     }
 
-    const width = xmax - xmin
-    const height = ymax - ymin
-
     return {
         d: points,
         x: xmin,
         y: ymin,
-        ox: width / 2 + xmin,
-        oy: height / 2 + ymin,
-        w: width,
-        h: height,
+        w: xmax - xmin,
+        h: ymax - ymin,
         p: perimeterPoints(points)
     }
 }

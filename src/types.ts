@@ -35,14 +35,6 @@ export interface IPathSegment {
      */
     y: number
     /**
-     * Approximate x origin
-     */
-    ox: number
-    /**
-     * Approximate y origin
-     */
-    oy: number
-    /**
      * Approximate perimeter
      */
     p: number

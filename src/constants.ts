@@ -13,4 +13,3 @@ export const EMPTY = ' '
 
 export const FILL = 'fill' as 'fill'
 export const NONE = 'none' as 'none'
-export const CLOCKWISE = 'clockwise' as 'clockwise'

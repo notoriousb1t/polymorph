@@ -73,16 +73,10 @@ describe('parsePath()', () => {
         )
     })
     it('parses q', () => {
-        assert.deepEqual(
-            renderPath(parsePoints('M 10 10 q 10 5 15 25'), Math.round),
-            'M 10 10 C 17 13 22 22 25 35'
-        )
+        assert.deepEqual(renderPath(parsePoints('M 10 10 q 10 5 15 25'), Math.round), 'M 10 10 C 17 13 22 22 25 35')
     })
     it('parses Q', () => {
-        assert.deepEqual(
-            renderPath(parsePoints('M 10 10 Q 20 15 25 35'), Math.round),
-            'M 10 10 C 17 13 22 22 25 35'
-        )
+        assert.deepEqual(renderPath(parsePoints('M 10 10 Q 20 15 25 35'), Math.round), 'M 10 10 C 17 13 22 22 25 35')
     })
     it('parses t', () => {
         assert.deepEqual(renderPath(parsePoints('M 10 10 t 15 25'), Math.round), 'M 10 10 C 10 10 10 10 25 35')
@@ -125,8 +119,6 @@ describe('parsePath()', () => {
             d: [20, 20, 20, 20, 20, 20, -10, 80, -10, 80, -10, 80, 20, 20],
             x: -10,
             y: 20,
-            ox: 5,
-            oy: 50,
             w: 30,
             h: 60,
             p: 134
@@ -147,8 +139,6 @@ describe('parsePath()', () => {
               d: [0, 0, 0, 0, 0, 0, 0, 12, 0, 12, 0, 12, 12, 12, 12, 12, 12, 12, 12, 0, 12, 0, 12, 0, 0, 0],
               x: 0,
               y: 0,
-              ox: 6,
-              oy: 6,
               w: 12,
               h: 12,
               p: 48
@@ -158,8 +148,6 @@ describe('parsePath()', () => {
               d: [16, 16, 16, 16, 16, 16, 16, 20, 16, 20, 16, 20, 20, 20, 20, 20, 20, 20, 20, 16, 20, 16, 20, 16, 16, 16],
               x: 16,
               y: 16,
-              ox: 18,
-              oy: 18,
               w: 4,
               h: 4,
               p: 16
