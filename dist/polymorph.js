@@ -1,21 +1,6 @@
 var polymorph = (function (exports) {
 'use strict';
 
-function isString(obj) {
-    return typeof obj === 'string';
-}
-
-var selectorRegex = /^([#|\.]|path)/i;
-function getPath(selector) {
-    if (isString(selector)) {
-        if (!selectorRegex.test(selector)) {
-            return selector;
-        }
-        selector = document.querySelector(selector);
-    }
-    return selector.getAttribute('d');
-}
-
 var _ = undefined;
 var V = 'V';
 var H = 'H';
@@ -28,6 +13,10 @@ var T = 'T';
 var EMPTY = ' ';
 var FILL = 'fill';
 var NONE = 'none';
+
+function isString(obj) {
+    return typeof obj === 'string';
+}
 
 function renderPath(ns, formatter) {
     if (isString(ns)) {
@@ -494,6 +483,17 @@ function parsePath(d) {
     };
 }
 
+var selectorRegex = /^([#|\.]|path)/i;
+function getPath(selector) {
+    if (isString(selector)) {
+        if (!selectorRegex.test(selector)) {
+            return selector;
+        }
+        selector = document.querySelector(selector);
+    }
+    return selector.getAttribute('d');
+}
+
 function parse(d) {
     return parsePath(getPath(d));
 }
@@ -502,7 +502,6 @@ function interpolate(paths, options) {
     return interpolatePath(paths.map(parse), options || {});
 }
 
-exports.getPath = getPath;
 exports.interpolate = interpolate;
 
 return exports;
