@@ -32,6 +32,10 @@
     </tbody>
 </table>
 
+## Demos
+- [Morph Leonardo da Vinci to a Skull](https://codepen.io/notoriousb1t/pen/KyPoYm)
+- [Charmander Evolves with Just Animate 2 + Polymorph](https://codepen.io/notoriousb1t/pen/gXpYEG?editors=1010)
+- [Morphin' Icons with Just Animate 2 + Polymorph](https://codepen.io/notoriousb1t/pen/veMyxw?editors=1010)
 
 ## How to Use
 
