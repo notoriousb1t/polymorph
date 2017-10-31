@@ -15,10 +15,28 @@
  - Super tiny, about 5k minified
  - Free for commercial and non-commerical use under the MIT license
 
+<table>
+    <tbody>
+        <tr>
+        <td style="text-align: center;"><h3>Flubber (53kb)</h3></td>
+        <td style="text-align: center;"><h3>Polymorph  (5kb)</h3></td>
+        </tr>
+        <tr>
+            <td>
+            <img style="max-height: 320px" src="./assets/flubber-evolve.gif" />
+            </td>
+            <td>
+                <img style="max-height: 320px"  src="./assets/polymorph-evolve.gif" />
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+
 ## How to Use
 
 ### interpolate(paths, options)
-Returns a function that interpolates between two or more paths. 
+Returns a function that interpolates between two or more paths.
 
 ```js
 // create function to interpolate between the two paths

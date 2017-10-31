@@ -1,6 +1,7 @@
 node_modules
 src
 tests
+assets
 .alm
 .vscode
 .editorconfig
