@@ -92,13 +92,6 @@ export interface InterpolateOptions {
      */
     origin?: { x: number, y: number }
     /**
-     * The wind (like a clock) direction of the path.
-     *  - none: will leave the path as is.
-     *  - clockwise: (default) will change all subpaths to draw clockwise.
-     *  - counter-clockwise: will change all paths to draw counter-clockwise.
-     */
-    wind?: 'none' | 'clockwise' | 'counter-clockwise'
-    /**
      * Determines the strategy to optimize two paths for each other.
      *
      * - none: use when both shapes have an equal number of subpaths and points
