@@ -7,6 +7,9 @@ describe('parsePath()', () => {
     it('parses terms properly with spaces', () => {
         assert.deepEqual(parsePath('M 10 42 v 0').data[0].d, [10, 42, 10, 42, 10, 42, 10, 42])
     })
+    it('ignores spaces, tabs, and new lines', () => {
+      assert.deepEqual(parsePath('M10,42\n \tv0').data[0].d, [10, 42, 10, 42, 10, 42, 10, 42])
+    });
     it('parses terms properly with commas', () => {
         assert.deepEqual(parsePath('M10,42v0').data[0].d, [10, 42, 10, 42, 10, 42, 10, 42])
     })

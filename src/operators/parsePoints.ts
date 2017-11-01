@@ -2,7 +2,7 @@ import { _, Z, T, Q, S, C, V, H, EMPTY } from '../constants'
 import { coalesce } from '../utilities/coalesce'
 import { IParseContext, FloatArray } from '../types'
 import { raiseError } from '../utilities/errors'
-import { quadraticRatio } from '../utilities/math';
+import { quadraticRatio } from '../utilities/math'
 
 // describes the number of arguments each command has
 const argLengths = { M: 2, H: 1, V: 1, L: 2, Z: 0, C: 6, S: 4, Q: 4, T: 2 }
@@ -178,7 +178,7 @@ function parseSegments(d: string): (string | number)[][] {
     // split on double-space (splits on command segment)
     // parse each segment into an of list of command + args
     return d
-        .replace(/[\^\s]?([mhvlzcsqta]|\-?\d*\.?\d+)[,\$\s]?/gi, ' $1')
+        .replace(/[\^\s]*([mhvlzcsqta]|\-?[0-9]*\.?[0-9]+)[,\$\s]*/gi, ' $1')
         .replace(/([mhvlzcsqta])/gi, ' $1')
         .trim()
         .split('  ')
@@ -226,6 +226,7 @@ export function parsePoints(d: string): FloatArray[] {
         const parser = parsers[command]
         const maxLength = argLengths[command]
         if (!parser) {
+            console.log(ctx)
             raiseError(ctx.c, ' is not supported')
         }
 
