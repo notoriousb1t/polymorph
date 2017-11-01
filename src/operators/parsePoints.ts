@@ -178,7 +178,7 @@ function parseSegments(d: string): (string | number)[][] {
     // split on double-space (splits on command segment)
     // parse each segment into an of list of command + args
     return d
-        .replace(/[\^\s]*([mhvlzcsqta]|\-?[0-9]*\.?[0-9]+)[,\$\s]*/gi, ' $1')
+        .replace(/[\^\s]*([mhvlzcsqta]|\-?\d*\.?\d+)[,\$\s]*/gi, ' $1')
         .replace(/([mhvlzcsqta])/gi, ' $1')
         .trim()
         .split('  ')
@@ -226,7 +226,6 @@ export function parsePoints(d: string): FloatArray[] {
         const parser = parsers[command]
         const maxLength = argLengths[command]
         if (!parser) {
-            console.log(ctx)
             raiseError(ctx.c, ' is not supported')
         }
 
