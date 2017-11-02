@@ -13,6 +13,10 @@ export function normalizePaths(left: IPath, right: IPath, options: InterpolateOp
     // sort segments by perimeter size (more or less area)
     const leftPath = getSortedSegments(left)
     const rightPath = getSortedSegments(right)
+    const origin = options.origin
+    const ox = origin.x
+    const oy = origin.y
+    const absolute = origin.absolute
 
     if (leftPath.length !== rightPath.length) {
         if (options.optimize === FILL) {
@@ -33,8 +37,8 @@ export function normalizePaths(left: IPath, right: IPath, options: InterpolateOp
             const ls = leftPath[i]
             const rs = rightPath[i]
 
-            normalizePoints(ls.x + ls.w * options.origin.x, ls.y + ls.h * options.origin.y, matrix[0][i])
-            normalizePoints(rs.x + rs.w * options.origin.x, rs.y + rs.h * options.origin.y, matrix[1][i])
+            normalizePoints(absolute ? ox : ls.x + ls.w * ox, absolute ? oy : ls.y + ls.h * oy, matrix[0][i])
+            normalizePoints(absolute ? ox : rs.x + rs.w * ox, absolute ? oy : rs.y + rs.h * oy, matrix[1][i])
         }
     }
 

@@ -103,8 +103,8 @@ function fillSegments(larger, smaller, origin) {
         var l = larger[i];
         var d = createNumberArray(l.d.length);
         for (var k = 0; k < l.d.length; k += 2) {
-            d[k] = l.x + (l.w * origin.x);
-            d[k + 1] = l.y + (l.y * origin.y);
+            d[k] = origin.absolute ? origin.x : l.x + (l.w * origin.x);
+            d[k + 1] = origin.absolute ? origin.y : l.y + (l.y * origin.y);
         }
         smaller[i] = fillObject({ d: d }, l);
     }
@@ -203,6 +203,10 @@ function sizeDesc(a, b) {
 function normalizePaths(left, right, options) {
     var leftPath = getSortedSegments(left);
     var rightPath = getSortedSegments(right);
+    var origin = options.origin;
+    var ox = origin.x;
+    var oy = origin.y;
+    var absolute = origin.absolute;
     if (leftPath.length !== rightPath.length) {
         if (options.optimize === FILL) {
             fillSegments(leftPath, rightPath, options.origin);
@@ -218,8 +222,8 @@ function normalizePaths(left, right, options) {
         for (var i = 0; i < leftPath.length; i++) {
             var ls = leftPath[i];
             var rs = rightPath[i];
-            normalizePoints(ls.x + ls.w * options.origin.x, ls.y + ls.h * options.origin.y, matrix[0][i]);
-            normalizePoints(rs.x + rs.w * options.origin.x, rs.y + rs.h * options.origin.y, matrix[1][i]);
+            normalizePoints(absolute ? ox : ls.x + ls.w * ox, absolute ? oy : ls.y + ls.h * oy, matrix[0][i]);
+            normalizePoints(absolute ? ox : rs.x + rs.w * ox, absolute ? oy : rs.y + rs.h * oy, matrix[1][i]);
         }
     }
     if (options.optimize === FILL) {

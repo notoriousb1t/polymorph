@@ -90,7 +90,7 @@ export interface InterpolateOptions {
     /**
      * Origin of the shape
      */
-    origin?: { x: number, y: number }
+    origin?: IOrigin
     /**
      * Determines the strategy to optimize two paths for each other.
      *
@@ -122,4 +122,20 @@ export interface FloatArray {
 
 export interface IFloatArrayConstructor {
     new (count: number): FloatArray
+}
+
+export interface IOrigin {
+  /**
+   * The y position
+   */
+  x: number
+  /**
+   * The x position
+   */
+  y: number
+  /**
+   * If true, x and y are absolute coordinates in the SVG.
+   * If false, x and y are a number between 0 and 1 representing 0% to 100% of the matched subpath
+   */
+  absolute?: boolean
 }
