@@ -12,7 +12,7 @@
  - morphs between two or more svg paths using a simple function
  - handles variable length paths and holes in paths
  - compatible with Just Animate and Popmotion animation libraries
- - Super tiny, about 5k minified
+ - Super tiny, about 6k minified
  - Free for commercial and non-commerical use under the MIT license
 
 <table>
@@ -77,11 +77,7 @@ Include this script
 ### Setup for NPM
 ```bash
 npm install polymorph-js --save
-```
-
-## Current Limitations
-
-- The only known limitation is that it cannot yet handle the A path command.  If you know how to convert from the arc command to the cubic bezier command, please create a pull request.  It would be greatly appreciated.
+``` 
 
 ## License
 This library is licensed under MIT.
