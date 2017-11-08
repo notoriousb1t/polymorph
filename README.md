@@ -19,7 +19,7 @@
     <tbody>
         <tr>
         <td style="text-align: center;"><h3>Flubber (53kb)</h3></td>
-        <td style="text-align: center;"><h3>Polymorph  (5kb)</h3></td>
+        <td style="text-align: center;"><h3>Polymorph  (6kb)</h3></td>
         </tr>
         <tr>
             <td>
@@ -77,7 +77,7 @@ Include this script
 ### Setup for NPM
 ```bash
 npm install polymorph-js --save
-``` 
+```
 
 ## License
 This library is licensed under MIT.

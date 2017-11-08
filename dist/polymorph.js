@@ -27,36 +27,9 @@ function renderPath(ns, formatter) {
     var result = '';
     for (var i = 0; i < ns.length; i++) {
         var n = ns[i];
-        var cx = n[0];
-        var cy = n[1];
-        result += M + EMPTY + formatter(cx) + EMPTY + formatter(cy) + EMPTY + C;
-        for (var f = 2; f < n.length; f += 6) {
-            var x1 = n[f];
-            var y1 = n[f + 1];
-            var x2 = n[f + 2];
-            var y2 = n[f + 3];
-            var dx = n[f + 4];
-            var dy = n[f + 5];
-            var sameX = cx === dx && cx === x1 && cx === x2;
-            var sameY = cy === dy && cy === y1 && cy === y2;
-            if (sameX && sameY) {
-                continue;
-            }
-            cx = dx;
-            cy = dy;
-            result +=
-                EMPTY +
-                    formatter(x1) +
-                    EMPTY +
-                    formatter(y1) +
-                    EMPTY +
-                    formatter(x2) +
-                    EMPTY +
-                    formatter(y2) +
-                    EMPTY +
-                    formatter(dx) +
-                    EMPTY +
-                    formatter(dy);
+        result += M + EMPTY + formatter(n[0]) + EMPTY + formatter(n[1]) + EMPTY + C;
+        for (var f = 2; f < n.length; f++) {
+            result += EMPTY + formatter(n[f]);
         }
     }
     return result;
