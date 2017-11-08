@@ -374,9 +374,6 @@ function arcToCurve(x1, y1, rx, ry, angle, large, sweep, dx, dy, f1, f2, cx, cy)
 }
 
 var argLengths = { M: 2, H: 1, V: 1, L: 2, Z: 0, C: 6, S: 4, Q: 4, T: 2, A: 7 };
-function addSegment(ctx, x, y) {
-    ctx.s.push((ctx.p = [(ctx.x = x), (ctx.y = y)]));
-}
 function addCurve(ctx, x1, y1, x2, y2, dx, dy) {
     var x = ctx.x;
     var y = ctx.y;
@@ -448,7 +445,7 @@ function parsePoints(d) {
             var x1 = void 0, y1 = void 0, dx = void 0, dy = void 0, x2 = void 0, y2 = void 0;
             switch (command) {
                 case M:
-                    addSegment(ctx, n[0], n[1]);
+                    ctx.s.push((ctx.p = [(ctx.x = n[0]), (ctx.y = n[1])]));
                     break;
                 case H:
                     addCurve(ctx, _, _, _, _, n[0], _);
