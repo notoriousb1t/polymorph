@@ -8,8 +8,8 @@ describe('parsePath()', () => {
         assert.deepEqual(parsePath('M 10 42 v 0').data[0].d, [10, 42, 10, 42, 10, 42, 10, 42])
     })
     it('ignores spaces, tabs, and new lines', () => {
-      assert.deepEqual(parsePath('M10,42\n \tv0').data[0].d, [10, 42, 10, 42, 10, 42, 10, 42])
-    });
+        assert.deepEqual(parsePath('M10,42\n \tv0').data[0].d, [10, 42, 10, 42, 10, 42, 10, 42])
+    })
     it('parses terms properly with commas', () => {
         assert.deepEqual(parsePath('M10,42v0').data[0].d, [10, 42, 10, 42, 10, 42, 10, 42])
     })
@@ -158,5 +158,39 @@ describe('parsePath()', () => {
           ]
         };
         assert.deepEqual(actual, expected)
+    })
+    it('parses a', () => {
+        const actual = renderPath(parsePoints('M25 25 a20 20 30 0 0 50 50'), Math.round)
+        assert.deepEqual(actual, 'M 25 25 C 6 44 15 77 41 84 53 87 66 84 75 75')
+    })
+    it('parses a with sweep flag', () => {
+        const actual = renderPath(parsePoints('M25 25 a20 20 30 0 1 50 50'), Math.round)
+        assert.deepEqual(actual, 'M 25 25 C 44 6 77 15 84 41 87 53 84 66 75 75')
+    })
+    it('parses a with large flag', () => {
+        const actual = renderPath(parsePoints('M0,0 a20 5 90 1 0 100 0'), Math.round)
+        assert.deepEqual(actual, 'M 0 0 C 0 154 42 250 75 173 90 137 100 71 100 0')
+    })
+    it('parses a with multiple arcs', () => {
+        const actual = renderPath(
+            parsePoints('M20,20 a10 10 45 1 0 0 25 10 10 45 1 0 0 25 10 10 45 1 0 0 25'),
+            Math.round
+        )
+        assert.deepEqual(
+            actual,
+            'M 20 20 C 10 20 4 30 9 39 11 43 16 45 20 45 10 45 4 55 9 64 11 68 16 70 20 70 10 70 4 80 9 89 11 93 16 95 20 95'
+        )
+    })
+    it('parses A', () => {
+        const actual = renderPath(parsePoints('M25 25 A20 20 30 0 0 50 50'), Math.round)
+        assert.deepEqual(actual, 'M 25 25 C 20 40 34 54 49 50 49 50 50 50 50 50')
+    })
+    it('parses A with sweep flag', () => {
+        const actual = renderPath(parsePoints('M25 25 A20 20 30 0 1 50 50'), Math.round)
+        assert.deepEqual(actual, 'M 25 25 C 40 20 54 34 50 49 50 49 50 50 50 50')
+    })
+    it('parses A with large flag', () => {
+        const actual = renderPath(parsePoints('M25 25 A20 5 90 1 0 50 50'), Math.round)
+        assert.deepEqual(actual, 'M 25 25 C 23 63 32 98 41 87 45 82 49 68 50 50')
     })
 })

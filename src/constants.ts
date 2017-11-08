@@ -7,7 +7,8 @@ export const V = 'V',
     C = 'C',
     S = 'S',
     Q = 'Q',
-    T = 'T'
+    T = 'T',
+    A = 'A'
 
 export const EMPTY = ' '
 

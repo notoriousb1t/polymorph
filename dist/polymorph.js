@@ -10,6 +10,7 @@ var C = 'C';
 var S = 'S';
 var Q = 'Q';
 var T = 'T';
+var A = 'A';
 var EMPTY = ' ';
 var FILL = 'fill';
 var NONE = 'none';
@@ -68,6 +69,11 @@ var floor = math.floor;
 var round = math.round;
 var sqrt = math.sqrt;
 var pow = math.pow;
+var cos = math.cos;
+var asin = math.asin;
+var sin = math.sin;
+var tan = math.tan;
+var PI = math.PI;
 var quadraticRatio = 2.0 / 3;
 var EPSILON = pow(2, -52);
 
@@ -291,91 +297,155 @@ function coalesce(current, fallback) {
     return current === _ ? fallback : current;
 }
 
-var argLengths = { M: 2, H: 1, V: 1, L: 2, Z: 0, C: 6, S: 4, Q: 4, T: 2 };
-function m(ctx) {
-    var n = ctx.t;
-    addSegment(ctx, n[0], n[1]);
-}
-function h(ctx) {
-    addCurve(ctx, _, _, _, _, ctx.t[0], _);
-}
-function v(ctx) {
-    addCurve(ctx, _, _, _, _, _, ctx.t[0]);
-}
-function l(ctx) {
-    var n = ctx.t;
-    addCurve(ctx, _, _, _, _, n[0], n[1]);
-}
-function z(ctx) {
-    addCurve(ctx, _, _, _, _, ctx.p[0], ctx.p[1]);
-}
-function c(ctx) {
-    var n = ctx.t;
-    addCurve(ctx, n[0], n[1], n[2], n[3], n[4], n[5]);
-    ctx.cx = n[2];
-    ctx.cy = n[3];
-}
-function s(ctx) {
-    var n = ctx.t;
-    var isInitialCurve = ctx.lc !== S && ctx.lc !== C;
-    var x1 = isInitialCurve ? _ : ctx.x * 2 - ctx.cx;
-    var y1 = isInitialCurve ? _ : ctx.y * 2 - ctx.cy;
-    addCurve(ctx, x1, y1, n[0], n[1], n[2], n[3]);
-    ctx.cx = n[0];
-    ctx.cy = n[1];
-}
-function q(ctx) {
-    var n = ctx.t;
-    var cx1 = n[0];
-    var cy1 = n[1];
-    var dx = n[2];
-    var dy = n[3];
-    var x = ctx.x;
-    var y = ctx.y;
-    addCurve(ctx, x + (cx1 - x) * quadraticRatio, y + (cy1 - y) * quadraticRatio, dx + (cx1 - dx) * quadraticRatio, dy + (cy1 - dy) * quadraticRatio, dx, dy);
-    ctx.cx = cx1;
-    ctx.cy = cy1;
-}
-function t(ctx) {
-    var n = ctx.t;
-    var dx = n[0];
-    var dy = n[1];
-    var x = ctx.x;
-    var y = ctx.y;
-    var x1, y1, x2, y2;
-    if (ctx.lc === Q || ctx.lc === T) {
-        var cx1 = x * 2 - ctx.cx;
-        var cy1 = y * 2 - ctx.cy;
-        x1 = x + (cx1 - x) * quadraticRatio;
-        y1 = y + (cy1 - y) * quadraticRatio;
-        x2 = dx + (cx1 - dx) * quadraticRatio;
-        y2 = dy + (cy1 - dy) * quadraticRatio;
+var _120 = PI * 120 / 180;
+var PI2 = PI * 2;
+function arcToCurve(x1, y1, rx, ry, angle, large, sweep, dx, dy, f1, f2, cx, cy) {
+    if (rx <= 0 || ry <= 0) {
+        return [x1, y1, dx, dy, dx, dy];
+    }
+    var rad = PI / 180 * (+angle || 0);
+    var cosrad = cos(rad);
+    var sinrad = sin(rad);
+    var recursive = !!f1;
+    if (!recursive) {
+        var x1old = x1;
+        var dxold = dx;
+        x1 = x1old * cosrad - y1 * -sinrad;
+        y1 = x1old * -sinrad + y1 * cosrad;
+        dx = dxold * cosrad - dy * -sinrad;
+        dy = dxold * -sinrad + dy * cosrad;
+        var x = (x1 - dx) / 2;
+        var y = (y1 - dy) / 2;
+        var h = x * x / (rx * rx) + y * y / (ry * ry);
+        if (h > 1) {
+            h = sqrt(h);
+            rx = h * rx;
+            ry = h * ry;
+        }
+        var k = (large === sweep ? -1 : 1) *
+            sqrt(abs((rx * rx * ry * ry - rx * rx * y * y - ry * ry * x * x) / (rx * rx * y * y + ry * ry * x * x)));
+        cx = k * rx * y / ry + (x1 + dx) / 2;
+        cy = k * -ry * x / rx + (y1 + dy) / 2;
+        f1 = asin((y1 - cy) / ry);
+        f2 = asin((dy - cy) / ry);
+        if (x1 < cx) {
+            f1 = PI - f1;
+        }
+        if (dx < cx) {
+            f2 = PI - f2;
+        }
+        if (f1 < 0) {
+            f1 += PI2;
+        }
+        if (f2 < 0) {
+            f2 += PI2;
+        }
+        if (sweep && f1 > f2) {
+            f1 -= PI2;
+        }
+        if (!sweep && f2 > f1) {
+            f2 -= PI2;
+        }
+    }
+    var res;
+    if (abs(f2 - f1) > _120) {
+        var f2old = f2;
+        var x2old = dx;
+        var y2old = dy;
+        f2 = f1 + _120 * (sweep && f2 > f1 ? 1 : -1);
+        dx = cx + rx * cos(f2);
+        dy = cy + ry * sin(f2);
+        res = arcToCurve(dx, dy, rx, ry, angle, 0, sweep, x2old, y2old, f2, f2old, cx, cy);
     }
     else {
-        x1 = x2 = x;
-        y1 = y2 = y;
+        res = [];
     }
-    addCurve(ctx, x1, y1, x2, y2, dx, dy);
-    ctx.cx = x2;
-    ctx.cy = y2;
+    var t = 4 / 3 * tan((f2 - f1) / 4);
+    res.splice(0, 0, 2 * x1 - (x1 + t * rx * sin(f1)), 2 * y1 - (y1 - t * ry * cos(f1)), dx + t * rx * sin(f2), dy - t * ry * cos(f2), dx, dy);
+    if (!recursive) {
+        for (var i = 0, ilen = res.length; i < ilen; i += 2) {
+            var xt = res[i], yt = res[i + 1];
+            res[i] = xt * cosrad - yt * sinrad;
+            res[i + 1] = xt * sinrad + yt * cosrad;
+        }
+    }
+    return res;
 }
+
+var argLengths = { M: 2, H: 1, V: 1, L: 2, Z: 0, C: 6, S: 4, Q: 4, T: 2, A: 7 };
 var parsers = {
-    M: m,
-    H: h,
-    V: v,
-    L: l,
-    Z: z,
-    C: c,
-    S: s,
-    Q: q,
-    T: t
+    M: function (ctx) {
+        addSegment(ctx, ctx.t[0], ctx.t[1]);
+    },
+    H: function (ctx) {
+        addCurve(ctx, _, _, _, _, ctx.t[0], _);
+    },
+    V: function (ctx) {
+        addCurve(ctx, _, _, _, _, _, ctx.t[0]);
+    },
+    L: function (ctx) {
+        addCurve(ctx, _, _, _, _, ctx.t[0], ctx.t[1]);
+    },
+    Z: function (ctx) {
+        addCurve(ctx, _, _, _, _, ctx.p[0], ctx.p[1]);
+    },
+    C: function (ctx) {
+        var n = ctx.t;
+        addCurve(ctx, n[0], n[1], n[2], n[3], n[4], n[5]);
+        ctx.cx = n[2];
+        ctx.cy = n[3];
+    },
+    S: function (ctx) {
+        var n = ctx.t;
+        var isInitialCurve = ctx.lc !== S && ctx.lc !== C;
+        var x1 = isInitialCurve ? _ : ctx.x * 2 - ctx.cx;
+        var y1 = isInitialCurve ? _ : ctx.y * 2 - ctx.cy;
+        addCurve(ctx, x1, y1, n[0], n[1], n[2], n[3]);
+        ctx.cx = n[0];
+        ctx.cy = n[1];
+    },
+    Q: function (ctx) {
+        var n = ctx.t;
+        var cx1 = n[0];
+        var cy1 = n[1];
+        var dx = n[2];
+        var dy = n[3];
+        addCurve(ctx, ctx.x + (cx1 - ctx.x) * quadraticRatio, ctx.y + (cy1 - ctx.y) * quadraticRatio, dx + (cx1 - dx) * quadraticRatio, dy + (cy1 - dy) * quadraticRatio, dx, dy);
+        ctx.cx = cx1;
+        ctx.cy = cy1;
+    },
+    T: function (ctx) {
+        var dx = ctx.t[0];
+        var dy = ctx.t[1];
+        var x = ctx.x;
+        var y = ctx.y;
+        var x1, y1, x2, y2;
+        if (ctx.lc === Q || ctx.lc === T) {
+            var cx1 = x * 2 - ctx.cx;
+            var cy1 = y * 2 - ctx.cy;
+            x1 = x + (cx1 - x) * quadraticRatio;
+            y1 = y + (cy1 - y) * quadraticRatio;
+            x2 = dx + (cx1 - dx) * quadraticRatio;
+            y2 = dy + (cy1 - dy) * quadraticRatio;
+        }
+        else {
+            x1 = x2 = x;
+            y1 = y2 = y;
+        }
+        addCurve(ctx, x1, y1, x2, y2, dx, dy);
+        ctx.cx = x2;
+        ctx.cy = y2;
+    },
+    A: function (ctx) {
+        var n = ctx.t;
+        var beziers = arcToCurve(ctx.x, ctx.y, n[0], n[1], n[2], n[3], n[4], n[5], n[6]);
+        for (var i = 0; i < beziers.length; i += 6) {
+            addCurve(ctx, beziers[i], beziers[i + 1], beziers[i + 2], beziers[i + 3], beziers[i + 4], beziers[i + 5]);
+        }
+    }
 };
 function addSegment(ctx, x, y) {
-    ctx.x = x;
-    ctx.y = y;
-    var p = [x, y];
-    ctx.s.push(p);
-    ctx.p = p;
+    ctx.s.push((ctx.p = [(ctx.x = x), (ctx.y = y)]));
 }
 function addCurve(ctx, x1, y1, x2, y2, dx, dy) {
     var x = ctx.x;
@@ -386,16 +456,24 @@ function addCurve(ctx, x1, y1, x2, y2, dx, dy) {
     ctx.lc = ctx.c;
 }
 function convertToAbsolute(ctx) {
-    if (ctx.c === V) {
-        ctx.t[0] += ctx.y;
+    var c = ctx.c;
+    var t = ctx.t;
+    var x = ctx.x;
+    var y = ctx.y;
+    if (c === V) {
+        t[0] += y;
     }
-    else if (ctx.c === H) {
-        ctx.t[0] += ctx.x;
+    else if (c === H) {
+        t[0] += x;
+    }
+    else if (c === A) {
+        t[5] += x;
+        t[6] += y;
     }
     else {
-        for (var j = 0; j < ctx.t.length; j += 2) {
-            ctx.t[j] += ctx.x;
-            ctx.t[j + 1] += ctx.y;
+        for (var j = 0; j < t.length; j += 2) {
+            t[j] += x;
+            t[j + 1] += y;
         }
     }
 }

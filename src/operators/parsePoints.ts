@@ -1,107 +1,101 @@
-import { _, Z, T, Q, S, C, V, H, EMPTY } from '../constants'
+import { _, Z, T, Q, S, C, V, H, EMPTY, A } from '../constants'
 import { coalesce } from '../utilities/coalesce'
 import { IParseContext, FloatArray } from '../types'
 import { raiseError } from '../utilities/errors'
 import { quadraticRatio } from '../utilities/math'
+import { arcToCurve } from './arcToCurve'
 
 // describes the number of arguments each command has
-const argLengths = { M: 2, H: 1, V: 1, L: 2, Z: 0, C: 6, S: 4, Q: 4, T: 2 }
-
-function m(ctx: IParseContext): void {
-    const n = ctx.t
-    addSegment(ctx, n[0], n[1])
-}
-function h(ctx: IParseContext): void {
-    addCurve(ctx, _, _, _, _, ctx.t[0], _)
-}
-function v(ctx: IParseContext): void {
-    addCurve(ctx, _, _, _, _, _, ctx.t[0])
-}
-function l(ctx: IParseContext): void {
-    const n = ctx.t
-    addCurve(ctx, _, _, _, _, n[0], n[1])
-}
-function z(ctx: IParseContext): void {
-    addCurve(ctx, _, _, _, _, ctx.p[0], ctx.p[1])
-}
-function c(ctx: IParseContext): void {
-    const n = ctx.t
-    addCurve(ctx, n[0], n[1], n[2], n[3], n[4], n[5])
-
-    // set last control point for subsequence C/S
-    ctx.cx = n[2]
-    ctx.cy = n[3]
-}
-function s(ctx: IParseContext): void {
-    const n = ctx.t
-    const isInitialCurve = ctx.lc !== S && ctx.lc !== C
-    const x1 = isInitialCurve ? _ : ctx.x * 2 - ctx.cx
-    const y1 = isInitialCurve ? _ : ctx.y * 2 - ctx.cy
-
-    addCurve(ctx, x1, y1, n[0], n[1], n[2], n[3])
-
-    // set last control point for subsequence C/S
-    ctx.cx = n[0]
-    ctx.cy = n[1]
-}
-function q(ctx: IParseContext): void {
-    const n = ctx.t
-    const cx1 = n[0]
-    const cy1 = n[1]
-    const dx = n[2]
-    const dy = n[3]
-    const x = ctx.x
-    const y = ctx.y
-
-    addCurve(
-        ctx,
-        x + (cx1 - x) * quadraticRatio,
-        y + (cy1 - y) * quadraticRatio,
-        dx + (cx1 - dx) * quadraticRatio,
-        dy + (cy1 - dy) * quadraticRatio,
-        dx,
-        dy
-    )
-
-    ctx.cx = cx1
-    ctx.cy = cy1
-}
-function t(ctx: IParseContext): void {
-    const n = ctx.t
-    const dx = n[0]
-    const dy = n[1]
-    const x = ctx.x
-    const y = ctx.y
-
-    let x1: number, y1: number, x2: number, y2: number
-    if (ctx.lc === Q || ctx.lc === T) {
-        const cx1 = x * 2 - ctx.cx
-        const cy1 = y * 2 - ctx.cy
-        x1 = x + (cx1 - x) * quadraticRatio
-        y1 = y + (cy1 - y) * quadraticRatio
-        x2 = dx + (cx1 - dx) * quadraticRatio
-        y2 = dy + (cy1 - dy) * quadraticRatio
-    } else {
-        x1 = x2 = x
-        y1 = y2 = y
-    }
-
-    addCurve(ctx, x1, y1, x2, y2, dx, dy)
-
-    ctx.cx = x2
-    ctx.cy = y2
-}
+const argLengths = { M: 2, H: 1, V: 1, L: 2, Z: 0, C: 6, S: 4, Q: 4, T: 2, A: 7 }
 
 const parsers = {
-    M: m,
-    H: h,
-    V: v,
-    L: l,
-    Z: z,
-    C: c,
-    S: s,
-    Q: q,
-    T: t
+    M(ctx: IParseContext): void {
+        addSegment(ctx, ctx.t[0], ctx.t[1])
+    },
+    H(ctx: IParseContext): void {
+        addCurve(ctx, _, _, _, _, ctx.t[0], _)
+    },
+    V(ctx: IParseContext): void {
+        addCurve(ctx, _, _, _, _, _, ctx.t[0])
+    },
+    L(ctx: IParseContext): void {
+        addCurve(ctx, _, _, _, _, ctx.t[0], ctx.t[1])
+    },
+    Z(ctx: IParseContext): void {
+        addCurve(ctx, _, _, _, _, ctx.p[0], ctx.p[1])
+    },
+    C(ctx: IParseContext): void {
+        const n = ctx.t
+        addCurve(ctx, n[0], n[1], n[2], n[3], n[4], n[5])
+
+        // set last control point for subsequence C/S
+        ctx.cx = n[2]
+        ctx.cy = n[3]
+    },
+    S(ctx: IParseContext): void {
+        const n = ctx.t
+        const isInitialCurve = ctx.lc !== S && ctx.lc !== C
+        const x1 = isInitialCurve ? _ : ctx.x * 2 - ctx.cx
+        const y1 = isInitialCurve ? _ : ctx.y * 2 - ctx.cy
+
+        addCurve(ctx, x1, y1, n[0], n[1], n[2], n[3])
+
+        // set last control point for subsequence C/S
+        ctx.cx = n[0]
+        ctx.cy = n[1]
+    },
+    Q(ctx: IParseContext): void {
+        const n = ctx.t
+        const cx1 = n[0]
+        const cy1 = n[1]
+        const dx = n[2]
+        const dy = n[3]
+
+        addCurve(
+            ctx,
+            ctx.x + (cx1 - ctx.x) * quadraticRatio,
+            ctx.y + (cy1 - ctx.y) * quadraticRatio,
+            dx + (cx1 - dx) * quadraticRatio,
+            dy + (cy1 - dy) * quadraticRatio,
+            dx,
+            dy
+        )
+
+        ctx.cx = cx1
+        ctx.cy = cy1
+    },
+    T(ctx: IParseContext): void {
+        const dx = ctx.t[0]
+        const dy = ctx.t[1]
+        const x = ctx.x
+        const y = ctx.y
+
+        let x1: number, y1: number, x2: number, y2: number
+        if (ctx.lc === Q || ctx.lc === T) {
+            const cx1 = x * 2 - ctx.cx
+            const cy1 = y * 2 - ctx.cy
+            x1 = x + (cx1 - x) * quadraticRatio
+            y1 = y + (cy1 - y) * quadraticRatio
+            x2 = dx + (cx1 - dx) * quadraticRatio
+            y2 = dy + (cy1 - dy) * quadraticRatio
+        } else {
+            x1 = x2 = x
+            y1 = y2 = y
+        }
+
+        addCurve(ctx, x1, y1, x2, y2, dx, dy)
+
+        ctx.cx = x2
+        ctx.cy = y2
+    },
+    A(ctx: IParseContext): void {
+        const n = ctx.t
+        const beziers = arcToCurve(ctx.x, ctx.y, n[0], n[1], n[2], n[3], n[4], n[5], n[6])
+
+        for (let i = 0; i < beziers.length; i += 6) {
+            addCurve(ctx, beziers[i], beziers[i + 1], beziers[i + 2], beziers[i + 3], beziers[i + 4], beziers[i + 5])
+        }
+    }
 }
 
 /**
@@ -111,12 +105,8 @@ const parsers = {
  * @param y Starting y position on this segment
  */
 function addSegment(ctx: IParseContext, x: number, y: number): void {
-    ctx.x = x
-    ctx.y = y
-
-    const p = [x, y]
-    ctx.s.push(p)
-    ctx.p = p
+    // assign new x,y and create new subpath
+    ctx.s.push((ctx.p = [(ctx.x = x), (ctx.y = y)]))
 }
 
 /**
@@ -159,14 +149,22 @@ function addCurve(
  * @param ctx Parser context
  */
 function convertToAbsolute(ctx: IParseContext): void {
-    if (ctx.c === V) {
-        ctx.t[0] += ctx.y
-    } else if (ctx.c === H) {
-        ctx.t[0] += ctx.x
+    const c = ctx.c
+    const t = ctx.t
+    const x = ctx.x
+    const y = ctx.y
+
+    if (c === V) {
+        t[0] += y
+    } else if (c === H) {
+        t[0] += x
+    } else if (c === A) {
+        t[5] += x
+        t[6] += y
     } else {
-        for (let j = 0; j < ctx.t.length; j += 2) {
-            ctx.t[j] += ctx.x
-            ctx.t[j + 1] += ctx.y
+        for (let j = 0; j < t.length; j += 2) {
+            t[j] += x
+            t[j + 1] += y
         }
     }
 }
