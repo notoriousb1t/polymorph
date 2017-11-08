@@ -1,4 +1,4 @@
-import { _, Z, T, Q, S, C, V, H, EMPTY, A } from '../constants'
+import { _, Z, T, Q, S, C, V, H, EMPTY, A, M, L } from '../constants'
 import { coalesce } from '../utilities/coalesce'
 import { IParseContext, FloatArray } from '../types'
 import { raiseError } from '../utilities/errors'
@@ -7,107 +7,6 @@ import { arcToCurve } from './arcToCurve'
 
 // describes the number of arguments each command has
 const argLengths = { M: 2, H: 1, V: 1, L: 2, Z: 0, C: 6, S: 4, Q: 4, T: 2, A: 7 }
-
-const parsers = {
-    M(ctx: IParseContext): void {
-        addSegment(ctx, ctx.t[0], ctx.t[1])
-    },
-    H(ctx: IParseContext): void {
-        addCurve(ctx, _, _, _, _, ctx.t[0], _)
-    },
-    V(ctx: IParseContext): void {
-        addCurve(ctx, _, _, _, _, _, ctx.t[0])
-    },
-    L(ctx: IParseContext): void {
-        addCurve(ctx, _, _, _, _, ctx.t[0], ctx.t[1])
-    },
-    Z(ctx: IParseContext): void {
-        addCurve(ctx, _, _, _, _, ctx.p[0], ctx.p[1])
-    },
-    C(ctx: IParseContext): void {
-        const n = ctx.t
-        addCurve(ctx, n[0], n[1], n[2], n[3], n[4], n[5])
-
-        // set last control point for subsequence C/S
-        ctx.cx = n[2]
-        ctx.cy = n[3]
-    },
-    S(ctx: IParseContext): void {
-        const n = ctx.t
-        const isInitialCurve = ctx.lc !== S && ctx.lc !== C
-        const x1 = isInitialCurve ? _ : ctx.x * 2 - ctx.cx
-        const y1 = isInitialCurve ? _ : ctx.y * 2 - ctx.cy
-
-        addCurve(ctx, x1, y1, n[0], n[1], n[2], n[3])
-
-        // set last control point for subsequence C/S
-        ctx.cx = n[0]
-        ctx.cy = n[1]
-    },
-    Q(ctx: IParseContext): void {
-        const n = ctx.t
-        const cx1 = n[0]
-        const cy1 = n[1]
-        const dx = n[2]
-        const dy = n[3]
-
-        addCurve(
-            ctx,
-            ctx.x + (cx1 - ctx.x) * quadraticRatio,
-            ctx.y + (cy1 - ctx.y) * quadraticRatio,
-            dx + (cx1 - dx) * quadraticRatio,
-            dy + (cy1 - dy) * quadraticRatio,
-            dx,
-            dy
-        )
-
-        ctx.cx = cx1
-        ctx.cy = cy1
-    },
-    T(ctx: IParseContext): void {
-        const dx = ctx.t[0]
-        const dy = ctx.t[1]
-        const x = ctx.x
-        const y = ctx.y
-
-        let x1: number, y1: number, x2: number, y2: number
-        if (ctx.lc === Q || ctx.lc === T) {
-            const cx1 = x * 2 - ctx.cx
-            const cy1 = y * 2 - ctx.cy
-            x1 = x + (cx1 - x) * quadraticRatio
-            y1 = y + (cy1 - y) * quadraticRatio
-            x2 = dx + (cx1 - dx) * quadraticRatio
-            y2 = dy + (cy1 - dy) * quadraticRatio
-        } else {
-            x1 = x2 = x
-            y1 = y2 = y
-        }
-
-        addCurve(ctx, x1, y1, x2, y2, dx, dy)
-
-        ctx.cx = x2
-        ctx.cy = y2
-    },
-    A(ctx: IParseContext): void {
-        const n = ctx.t
-        const beziers = arcToCurve(ctx.x, ctx.y, n[0], n[1], n[2], n[3], n[4], n[5], n[6])
-
-        for (let i = 0; i < beziers.length; i += 6) {
-            addCurve(ctx, beziers[i], beziers[i + 1], beziers[i + 2], beziers[i + 3], beziers[i + 4], beziers[i + 5])
-        }
-    }
-}
-
-/**
- * Creates a new segment on this path
- * @param ctx Parser context
- * @param x Starting x position on this segment
- * @param y Starting y position on this segment
- */
-function addSegment(ctx: IParseContext, x: number, y: number): void {
-    // assign new x,y and create new subpath
-    ctx.s.push((ctx.p = [(ctx.x = x), (ctx.y = y)]))
-}
 
 /**
  * Adds a curve to the segment
@@ -220,12 +119,7 @@ export function parsePoints(d: string): FloatArray[] {
         // set command on context
         ctx.c = command
 
-        // find command parser
-        const parser = parsers[command]
         const maxLength = argLengths[command]
-        if (!parser) {
-            raiseError(ctx.c, ' is not supported')
-        }
 
         // process each part of this command.  Use do-while to accomodate Z
         const t2 = terms as number[]
@@ -239,7 +133,104 @@ export function parsePoints(d: string): FloatArray[] {
                 convertToAbsolute(ctx)
             }
             // parse
-            parser(ctx)
+
+            const n = ctx.t
+            const x = ctx.x
+            const y = ctx.y
+
+            let x1: number, y1: number, dx: number, dy: number, x2: number, y2: number
+
+            switch (command) {
+                case M:
+                    ctx.s.push((ctx.p = [(ctx.x = n[0]), (ctx.y = n[1])]))
+                    break
+                case H:
+                    addCurve(ctx, _, _, _, _, n[0], _)
+                    break
+                case V:
+                    addCurve(ctx, _, _, _, _, _, n[0])
+                    break
+                case L:
+                    addCurve(ctx, _, _, _, _, n[0], n[1])
+                    break
+                case Z:
+                    addCurve(ctx, _, _, _, _, ctx.p[0], ctx.p[1])
+                    break
+                case C:
+                    addCurve(ctx, n[0], n[1], n[2], n[3], n[4], n[5])
+
+                    // set last control point for subsequence C/S
+                    ctx.cx = n[2]
+                    ctx.cy = n[3]
+                    break
+                case S:
+                    const isInitialCurve = ctx.lc !== S && ctx.lc !== C
+                    x1 = isInitialCurve ? _ : x * 2 - ctx.cx
+                    y1 = isInitialCurve ? _ : y * 2 - ctx.cy
+
+                    addCurve(ctx, x1, y1, n[0], n[1], n[2], n[3])
+
+                    // set last control point for subsequence C/S
+                    ctx.cx = n[0]
+                    ctx.cy = n[1]
+                    break
+                case Q:
+                    const cx1 = n[0]
+                    const cy1 = n[1]
+                    dx = n[2]
+                    dy = n[3]
+
+                    addCurve(
+                        ctx,
+                        x + (cx1 - x) * quadraticRatio,
+                        y + (cy1 - y) * quadraticRatio,
+                        dx + (cx1 - dx) * quadraticRatio,
+                        dy + (cy1 - dy) * quadraticRatio,
+                        dx,
+                        dy
+                    )
+
+                    ctx.cx = cx1
+                    ctx.cy = cy1
+                    break
+                case T:
+                    dx = n[0]
+                    dy = n[1]
+
+                    if (ctx.lc === Q || ctx.lc === T) {
+                        x1 = x + (x * 2 - ctx.cx - x) * quadraticRatio
+                        y1 = y + (y * 2 - ctx.cy - y) * quadraticRatio
+                        x2 = dx + (x * 2 - ctx.cx - dx) * quadraticRatio
+                        y2 = dy + (y * 2 - ctx.cy - dy) * quadraticRatio
+                    } else {
+                        x1 = x2 = x
+                        y1 = y2 = y
+                    }
+
+                    addCurve(ctx, x1, y1, x2, y2, dx, dy)
+
+                    ctx.cx = x2
+                    ctx.cy = y2
+                    break
+                case A:
+                    const beziers = arcToCurve(x, y, n[0], n[1], n[2], n[3], n[4], n[5], n[6])
+
+                    for (let j = 0; j < beziers.length; j += 6) {
+                        addCurve(
+                            ctx,
+                            beziers[j],
+                            beziers[j + 1],
+                            beziers[j + 2],
+                            beziers[j + 3],
+                            beziers[j + 4],
+                            beziers[j + 5]
+                        )
+                    }
+                    break
+                default:
+                    raiseError(ctx.c, ' is not supported')
+            }
+
             k += maxLength
         } while (k < t2.length)
     }

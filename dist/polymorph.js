@@ -4,6 +4,7 @@ var polymorph = (function (exports) {
 var _ = undefined;
 var V = 'V';
 var H = 'H';
+var L = 'L';
 var Z = 'Z';
 var M = 'M';
 var C = 'C';
@@ -373,77 +374,6 @@ function arcToCurve(x1, y1, rx, ry, angle, large, sweep, dx, dy, f1, f2, cx, cy)
 }
 
 var argLengths = { M: 2, H: 1, V: 1, L: 2, Z: 0, C: 6, S: 4, Q: 4, T: 2, A: 7 };
-var parsers = {
-    M: function (ctx) {
-        addSegment(ctx, ctx.t[0], ctx.t[1]);
-    },
-    H: function (ctx) {
-        addCurve(ctx, _, _, _, _, ctx.t[0], _);
-    },
-    V: function (ctx) {
-        addCurve(ctx, _, _, _, _, _, ctx.t[0]);
-    },
-    L: function (ctx) {
-        addCurve(ctx, _, _, _, _, ctx.t[0], ctx.t[1]);
-    },
-    Z: function (ctx) {
-        addCurve(ctx, _, _, _, _, ctx.p[0], ctx.p[1]);
-    },
-    C: function (ctx) {
-        var n = ctx.t;
-        addCurve(ctx, n[0], n[1], n[2], n[3], n[4], n[5]);
-        ctx.cx = n[2];
-        ctx.cy = n[3];
-    },
-    S: function (ctx) {
-        var n = ctx.t;
-        var isInitialCurve = ctx.lc !== S && ctx.lc !== C;
-        var x1 = isInitialCurve ? _ : ctx.x * 2 - ctx.cx;
-        var y1 = isInitialCurve ? _ : ctx.y * 2 - ctx.cy;
-        addCurve(ctx, x1, y1, n[0], n[1], n[2], n[3]);
-        ctx.cx = n[0];
-        ctx.cy = n[1];
-    },
-    Q: function (ctx) {
-        var n = ctx.t;
-        var cx1 = n[0];
-        var cy1 = n[1];
-        var dx = n[2];
-        var dy = n[3];
-        addCurve(ctx, ctx.x + (cx1 - ctx.x) * quadraticRatio, ctx.y + (cy1 - ctx.y) * quadraticRatio, dx + (cx1 - dx) * quadraticRatio, dy + (cy1 - dy) * quadraticRatio, dx, dy);
-        ctx.cx = cx1;
-        ctx.cy = cy1;
-    },
-    T: function (ctx) {
-        var dx = ctx.t[0];
-        var dy = ctx.t[1];
-        var x = ctx.x;
-        var y = ctx.y;
-        var x1, y1, x2, y2;
-        if (ctx.lc === Q || ctx.lc === T) {
-            var cx1 = x * 2 - ctx.cx;
-            var cy1 = y * 2 - ctx.cy;
-            x1 = x + (cx1 - x) * quadraticRatio;
-            y1 = y + (cy1 - y) * quadraticRatio;
-            x2 = dx + (cx1 - dx) * quadraticRatio;
-            y2 = dy + (cy1 - dy) * quadraticRatio;
-        }
-        else {
-            x1 = x2 = x;
-            y1 = y2 = y;
-        }
-        addCurve(ctx, x1, y1, x2, y2, dx, dy);
-        ctx.cx = x2;
-        ctx.cy = y2;
-    },
-    A: function (ctx) {
-        var n = ctx.t;
-        var beziers = arcToCurve(ctx.x, ctx.y, n[0], n[1], n[2], n[3], n[4], n[5], n[6]);
-        for (var i = 0; i < beziers.length; i += 6) {
-            addCurve(ctx, beziers[i], beziers[i + 1], beziers[i + 2], beziers[i + 3], beziers[i + 4], beziers[i + 5]);
-        }
-    }
-};
 function addSegment(ctx, x, y) {
     ctx.s.push((ctx.p = [(ctx.x = x), (ctx.y = y)]));
 }
@@ -504,11 +434,7 @@ function parsePoints(d) {
         var command = commandLetter.toUpperCase();
         var isRelative = command !== Z && command !== commandLetter;
         ctx.c = command;
-        var parser = parsers[command];
         var maxLength = argLengths[command];
-        if (!parser) {
-            raiseError(ctx.c, ' is not supported');
-        }
         var t2 = terms;
         var k = 1;
         do {
@@ -516,7 +442,74 @@ function parsePoints(d) {
             if (isRelative) {
                 convertToAbsolute(ctx);
             }
-            parser(ctx);
+            var n = ctx.t;
+            var x = ctx.x;
+            var y = ctx.y;
+            var x1 = void 0, y1 = void 0, dx = void 0, dy = void 0, x2 = void 0, y2 = void 0;
+            switch (command) {
+                case M:
+                    addSegment(ctx, n[0], n[1]);
+                    break;
+                case H:
+                    addCurve(ctx, _, _, _, _, n[0], _);
+                    break;
+                case V:
+                    addCurve(ctx, _, _, _, _, _, n[0]);
+                    break;
+                case L:
+                    addCurve(ctx, _, _, _, _, n[0], n[1]);
+                    break;
+                case Z:
+                    addCurve(ctx, _, _, _, _, ctx.p[0], ctx.p[1]);
+                    break;
+                case C:
+                    addCurve(ctx, n[0], n[1], n[2], n[3], n[4], n[5]);
+                    ctx.cx = n[2];
+                    ctx.cy = n[3];
+                    break;
+                case S:
+                    var isInitialCurve = ctx.lc !== S && ctx.lc !== C;
+                    x1 = isInitialCurve ? _ : x * 2 - ctx.cx;
+                    y1 = isInitialCurve ? _ : y * 2 - ctx.cy;
+                    addCurve(ctx, x1, y1, n[0], n[1], n[2], n[3]);
+                    ctx.cx = n[0];
+                    ctx.cy = n[1];
+                    break;
+                case Q:
+                    var cx1 = n[0];
+                    var cy1 = n[1];
+                    dx = n[2];
+                    dy = n[3];
+                    addCurve(ctx, x + (cx1 - x) * quadraticRatio, y + (cy1 - y) * quadraticRatio, dx + (cx1 - dx) * quadraticRatio, dy + (cy1 - dy) * quadraticRatio, dx, dy);
+                    ctx.cx = cx1;
+                    ctx.cy = cy1;
+                    break;
+                case T:
+                    dx = n[0];
+                    dy = n[1];
+                    if (ctx.lc === Q || ctx.lc === T) {
+                        x1 = x + (x * 2 - ctx.cx - x) * quadraticRatio;
+                        y1 = y + (y * 2 - ctx.cy - y) * quadraticRatio;
+                        x2 = dx + (x * 2 - ctx.cx - dx) * quadraticRatio;
+                        y2 = dy + (y * 2 - ctx.cy - dy) * quadraticRatio;
+                    }
+                    else {
+                        x1 = x2 = x;
+                        y1 = y2 = y;
+                    }
+                    addCurve(ctx, x1, y1, x2, y2, dx, dy);
+                    ctx.cx = x2;
+                    ctx.cy = y2;
+                    break;
+                case A:
+                    var beziers = arcToCurve(x, y, n[0], n[1], n[2], n[3], n[4], n[5], n[6]);
+                    for (var j = 0; j < beziers.length; j += 6) {
+                        addCurve(ctx, beziers[j], beziers[j + 1], beziers[j + 2], beziers[j + 3], beziers[j + 4], beziers[j + 5]);
+                    }
+                    break;
+                default:
+                    raiseError(ctx.c, ' is not supported');
+            }
             k += maxLength;
         } while (k < t2.length);
     }
