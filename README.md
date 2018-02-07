@@ -11,7 +11,7 @@
 
  - morphs between two or more svg paths using a simple function
  - handles variable length paths and holes in paths
- - compatible with Just Animate and Popmotion animation libraries
+ - compatible with [Just Animate](https://github.com/just-animate/just-animate), [Popmotion](https://github.com/popmotion/popmotion), [nm8](https://github.com/davidkpiano/nm8), [TweenRex](https://github.com/tweenrex/tweenrex), and other animation libraries
  - Super tiny, about 6k minified
  - Free for commercial and non-commerical use under the MIT license
 
