@@ -7,7 +7,7 @@ module.exports = {
   name: 'polymorph',
   output: {
     file: 'dist/polymorph.js',
-    format: 'iife'
+    format: 'umd'
   },
   plugins: [
     typescript({

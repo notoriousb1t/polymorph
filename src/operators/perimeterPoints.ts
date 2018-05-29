@@ -7,7 +7,7 @@ import { FloatArray } from '../types';
  * @param pts
  */
 export function perimeterPoints(pts: FloatArray): number {
-  let n = pts.length
+  const n = pts.length
   let x2 = pts[n - 2]
   let y2 = pts[n - 1]
   let p = 0

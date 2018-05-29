@@ -20,7 +20,11 @@
         "strictNullChecks": false,
         "suppressImplicitAnyIndexErrors": true,
         "target": "es2015",
-        "outDir": "lib.es2015"
+        "outDir": "lib.es2015",
+        "lib": [
+            "es2015",
+            "dom"
+        ]
     },
     "exclude": ["dist", "lib", "lib.es2015", "tests", "node_modules", "types"]
 }
