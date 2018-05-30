@@ -1,5 +1,6 @@
 module.exports = {
   title: "Polymorph",
+  dest: "./docs",
   description: "Get Your SVG into Shape!",
   base: "/polymorph",
   themeConfig: {
