@@ -50,6 +50,7 @@
   },
   "version": "0.2.2",
   "dependencies": {
-    "@delucis/filesize-cli": "^1.1.0"
+    "@delucis/filesize-cli": "^1.1.0",
+    "vuepress": "^0.10.0"
   }
 }
