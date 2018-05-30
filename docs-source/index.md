@@ -1,6 +1,6 @@
 ---
 home: true
-# heroImage: /hero.png
+heroImage: /hero.png
 actionText: Get Started →
 actionLink: /about.md
 features:

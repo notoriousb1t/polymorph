@@ -45,5 +45,9 @@ Read the full [documentation](https://notoriousb1t.github.io/polymorph) to get s
 ## License
 This library is licensed under MIT.
 
-## Contributions / Questions
-Please create an issue for questions or to discuss new features.
+## Have a question or something to contribute?
+Please create an [issue](https://github.com/notoriousb1t/polymorph/issues) for questions or to discuss new features.
+
+## Special Thanks
+
+Special thanks to [@shshaw](https://twitter.com/shshaw) for the amazing logo and artwork!
