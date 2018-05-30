@@ -1,23 +1,14 @@
-# Polymorph
-
-Polymorph is a lightweight SVG morphing library that is built to work with your animation library.  Using a simple 0 to 1 function, it morphs smoothly between two shapes
-
-
-## How does it work?
-
-The base idea behind Polymorph is that all path commands can be translated to polybezier approximations.  For example, if the path includes the A (arc command), that can be translated to 1 to 3 cubicbeziers.  Polymorph will then align points in the two paths it is tweening between and add additional points and empty shapes to optimize them.  Doing this by hand is cumbersome, so polymorph uses a fast algorithm to do it for you!
-
-## Guides
-
-Get morphing with this animation library guides.
-
-- Getting Started with Popmotion (Coming Soon)
-- Getting Started with Just Animate (Coming Soon)
-- Getting Started with nm8 (Coming Soon)
-- Getting Started with TweenRex (Coming Soon)
-- Getting Started with GSAP (Coming Soon)
-
-## Getting Started
-
-- [Setup](./setup.md)
-- [API Reference](./api.md)
+---
+home: true
+# heroImage: /hero.png
+actionText: Get Started →
+actionLink: /about.md
+features:
+- title: Simple to Morph
+  details: Call a single function and plug that your animation library of choice.  It isn't more complicated than that.
+- title: Backward Compatible
+  details: Use it on your least favorite platforms and see great results!  It works great on modern browsers, too.
+- title: Super Lightweight
+  details: At about 6k minified and 3k gzipped, it is one of the smallest fully featured path morphing libraries available.
+footer: MIT Licensed | Copyright © 2017-present Christopher Wallis
+---
