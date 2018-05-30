@@ -2,7 +2,7 @@ module.exports = {
   title: "Polymorph",
   dest: "./docs",
   description: "Get Your SVG into Shape!",
-  base: "/polymorph",
+  base: "/polymorph/",
   themeConfig: {
     nav: [
         { text: "Setup", link: "/setup.md" },
