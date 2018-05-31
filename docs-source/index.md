@@ -5,7 +5,7 @@ actionText: Get Started →
 actionLink: /about.md
 features:
 - title: Simple to Morph
-  details: Call a single function and plug that your animation library of choice.  It isn't more complicated than that.
+  details: Call a single function and plug that into your animation library of choice.  It isn't more complicated than that.
 - title: Backward Compatible
   details: Use it on your least favorite platforms and see great results!  It works great on modern browsers, too.
 - title: Super Lightweight

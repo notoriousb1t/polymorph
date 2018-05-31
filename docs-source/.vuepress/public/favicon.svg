@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Generator: Adobe Illustrator 22.0.1, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
+<svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 viewBox="0 0 259 259" style="enable-background:new 0 0 259 259;" xml:space="preserve">
+<style type="text/css">
+	.st0{fill:url(#SVGID_1_);}
+	.st1{fill:url(#SVGID_2_);}
+	.st2{fill:none;}
+	.st3{clip-path:url(#SVGID_4_);}
+	.st4{fill:none;stroke:#000000;stroke-width:13.23;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:1.5;}
+</style>
+<g transform="translate(41.8345 -10)">
+	
+		<linearGradient id="SVGID_1_" gradientUnits="userSpaceOnUse" x1="-37.2529" y1="394.985" x2="-36.2529" y2="394.985" gradientTransform="matrix(10 251.304 251.304 -10 -98809.7656 13328.6543)">
+		<stop  offset="0" style="stop-color:#A2E0B0"/>
+		<stop  offset="0.54" style="stop-color:#42D08E"/>
+		<stop  offset="0.77" style="stop-color:#38C391"/>
+		<stop  offset="1" style="stop-color:#199C9A"/>
+	</linearGradient>
+	<path class="st0" d="M205,258.1H85c-66.2,0-120-53.8-120-120s53.8-120,120-120c20.5,0,0,120,0,120c25.8,11.7,52.7,34.6,60,93.3
+		c15.3-32.3,35.5-34.8,60-37.1V258.1z"/>
+	
+		<linearGradient id="SVGID_2_" gradientUnits="userSpaceOnUse" x1="-36.0221" y1="392.5348" x2="-35.0221" y2="392.5348" gradientTransform="matrix(31.2171 126.1519 126.1519 -31.2171 -48276.8359 16818.4531)">
+		<stop  offset="0" style="stop-color:#F8DA44"/>
+		<stop  offset="0.56" style="stop-color:#F5D037"/>
+		<stop  offset="1" style="stop-color:#E8AB05"/>
+	</linearGradient>
+	<path class="st1" d="M85,18.1c66.2,0,120,53.8,120,120H85L85,18.1L85,18.1z"/>
+	<path class="st2" d="M205,138.1H-35c0-66.2,53.8-120,120-120l0.8,0C151.6,18.5,205,72.1,205,138.1z"/>
+	<g>
+		<defs>
+			<path id="SVGID_3_" d="M205,138.1H-35c0-66.2,53.8-120,120-120l0.8,0C151.6,18.5,205,72.1,205,138.1z"/>
+		</defs>
+		<clipPath id="SVGID_4_">
+			<use xlink:href="#SVGID_3_"  style="overflow:visible;"/>
+		</clipPath>
+		<g class="st3">
+			<path d="M14,66.3h46.2v29.3c0,8.7-7.1,15.7-15.7,15.7H29.7c-8.7,0-15.7-7.1-15.7-15.7L14,66.3L14,66.3z"/>
+			<path class="st4" d="M189.3,63.2H-19.4"/>
+		</g>
+	</g>
+</g>
+</svg>
