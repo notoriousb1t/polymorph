@@ -85,7 +85,4 @@ export default {
 </script>
 
 <style lang="stylus"> 
-.hero {
-  max-width: 720px;
-}
 </style>
