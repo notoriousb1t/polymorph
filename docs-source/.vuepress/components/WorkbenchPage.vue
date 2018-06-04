@@ -1,33 +1,161 @@
 <template>
-    <div class="workbench-app">
-        <div class="dropzones">
-            <image-viewer v-if="image1" :image-contents="image1" />
-            <drop-zone v-else class="flex-centered" @select="openFile('image1', $event)" />
-
-            <image-viewer v-if="image2" :image-contents="image2" />
-            <drop-zone v-else class="flex-centered" @select="openFile('image2', $event)" />
-        </div>
+    <div class="workbench-app"> 
+        <template v-for="item in items">
+            <svg-editor 
+                :label="item.label" 
+                :itemState="item.itemState"
+                :loadState='item.loadState'
+                :errorMessage="item.errorMessage"
+                :isOptimized="item.isOptimized"
+                :paths="item.paths"
+                :svgContents="(item.optimizedFile && item.optimizedFile.text) || ''"
+                @open="openFile(item, $event)"
+                @changeSettings="changeSettings(item, $event)" />
+        </template> 
         <div class="flex-centered">Preview</div>
     </div>
 </template>
 
 <script>
-    export default {
-        data() {
-            return {
-                image1: '',
-                image1Name: '',
-                image2: '',
-                image2Name: ''
+import { parsePath } from "../../../lib.es2015/operators/parsePath";
+import { Svgo } from "../svgomg/svgo";
+
+const svgo = new Svgo();
+
+const settings = {
+    floatPrecision: 2,
+    plugins: {
+        cleanupAttrs: true,
+        removeXMLProcInst: true,
+        removeComments: true,
+        removeMetadata: true,
+        removeTitle: true,
+        removeDesc: true,
+        removeUselessDefs: true,
+        removeEditorsNSData: true,
+        removeEmptyAttrs: true,
+        removeHiddenElems: true,
+        removeEmptyText: true,
+        removeEmptyContainers: true,
+        removeViewBox: false,
+        cleanupEnableBackground: true,
+        convertStyleToAttrs: true,
+        convertColors: true,
+        convertPathData: true,
+        convertTransform: true,
+        removeUnknownsAndDefaults: true,
+        removeNonInheritableGroupAttrs: true,
+        removeUselessStrokeAndFill: false,
+        removeUnusedNS: true,
+        cleanupIDs: false,
+        cleanupNumericValues: true,
+        moveElemsAttrsToGroup: true,
+        moveGroupAttrsToElems: true,
+        collapseGroups: true,
+        removeRasterImages: false,
+        mergePaths: true,
+        convertShapeToPath: true,
+        sortAttrs: true,
+        removeDimensions: true
+    }
+};
+
+export default {
+    data() {
+        return {
+            items: [
+                { label: "A", itemState: "initial", loadState: "initial", errorMessage: "", isOptimized: true, paths: [], svgContents: '' },
+                { label: "B", itemState: "initial", loadState: "initial", errorMessage: "", isOptimized: true, paths: [], svgContents: '' }
+            ]
+        };
+    },
+    methods: {
+        openFile(item, fileObj) {
+            this.beginProcessing(item);
+            this.readFileContents(fileObj)
+                .then(contents => this.processSvg(item, contents))
+                .catch(error => this.handleError(item, error));
+        },
+        changeSettings(item, settings) {
+            if (settings.isOptimized !== undefined) {
+                item.isOptimized = settings.isOptimized;
+                if (item.originalFile) {
+                    this.processSvg(item, item.originalFile.text);
+                }
             }
         },
-        methods: {
-            openFile(dataName, $event) {
-                this.$data[dataName] = $event.contents;
-                this.$data[dataName + 'Name'] = $event.name;
+        beginProcessing(item) {
+            item.errorMessage = "";
+            item.loadState = "loading";
+            item.paths = [];
+        },
+        endProcessing(item) {
+            item.itemState = item.originalFile ? "edit" : "initial";
+        },
+        handleError(item, err) {
+            item.errorMessage = err.toString();
+            item.loadState = "error";
+            console.error(err);
+        },
+        async readFileContents(blob) {
+            return new Promise((resolve, reject) => {
+                const fileReader = new FileReader();
+                fileReader.onload = e => resolve(e.target.result);
+                fileReader.onerror = reject;
+                fileReader.readAsText(blob);
+            });
+        },
+        async processSvg(item, contents) {
+            // get a job id
+            const thisJobId = (this._latestCompressJobId = Math.random());
+
+            // cancel current request if applicable
+            await svgo.abortCurrent();
+
+            if (thisJobId != this._latestCompressJobId) {
+                // while we've been waiting, there's been a newer call
+                // to _compressSvg, we don't need to do anything
+                return;
+            }
+
+            let file = await svgo.load(contents);
+            item.originalFile = file;
+
+            if (item.isOptimized) {
+                file = await svgo.process(settings, () => {
+                    // notify UI somehow
+                });
+            }
+
+            item.optimizedFile = file;
+
+            console.log(`finished processing file: ${item.originalFile.text.length} -> ${item.optimizedFile.text.length}`);
+
+            // start parsing the svg into paths and points
+            this.$nextTick(() => this.parseSVG(item));
+        },
+        parseSVG(item) {
+            // read svg
+            try {
+                const div = document.createElement("div");
+                div.innerHTML = item.optimizedFile.text;
+
+                // get all paths in document except for ones used in clippath
+                const pathEls = Array.from(div.querySelectorAll(":not(clipPath) > path"));
+
+                item.paths = pathEls.map((el, i) => ({
+                    el: el,
+                    index: i,
+                    path: parsePath(el.getAttribute("d"))
+                })); 
+
+                this.endProcessing(item);
+            } catch (e) {
+                this.handleError(item, e);
             }
         }
     }
+};
 </script>
 
 <style lang="css">
@@ -38,25 +166,10 @@
     overflow: hidden;
     background-color: hsl(163, 8%, 92%);
     display: grid;
-    grid-template-columns: 50vw 50vw;
+    grid-template-columns: repeat(3, 1fr);
     grid-template-rows: 100%;
 }
 .dropzone {
     border: dashed 2px lightgray;
-}
-.dropzones {
-    display: grid;
-    grid-template-columns: 100%;
-    grid-template-rows: 50% 50%;
-    width: 100%;
-    height: 100%;
-}
-.flex-centered {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-.flex-centered > * {
-    margin: auto;
 }
 </style>
