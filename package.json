@@ -22,7 +22,7 @@
     "typescript": "^2.5.2",
     "uglify-js": "^3.1.1",
     "webpack": "^4.10.2",
-    "webpack-cli": "^2.1.5"
+    "webpack-cli": "^3.0.2"
   },
   "jsnext:main": "./lib.es2015/index.js",
   "homepage": "https://github.com/notoriousb1t/polymorph#readme",
