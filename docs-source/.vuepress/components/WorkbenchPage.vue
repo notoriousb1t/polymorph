@@ -1,18 +1,20 @@
 <template>
-    <div class="workbench-app"> 
-        <template v-for="item in items">
-            <svg-editor 
-                :label="item.label" 
-                :itemState="item.itemState"
-                :loadState='item.loadState'
-                :errorMessage="item.errorMessage"
-                :isOptimized="item.isOptimized"
-                :paths="item.paths"
-                :svgContents="(item.optimizedFile && item.optimizedFile.text) || ''"
-                @open="openFile(item, $event)"
-                @changeSettings="changeSettings(item, $event)" />
-        </template> 
-        <div class="flex-centered">Preview</div>
+    <div class="workbench-app">
+        <svg-editor 
+            v-for="item in items"
+            :label="item.label" 
+            :itemState="item.itemState"
+            :loadState='item.loadState'
+            :errorMessage="item.errorMessage"
+            :isOptimized="item.isOptimized"
+            :paths="item.paths"
+            :svgContents="(item.optimizedFile && item.optimizedFile.text) || ''"
+            @open="openFile(item, $event)"
+            @changeSettings="changeSettings(item, $event)" />
+
+        <div class="flex-centered">Preview</div> 
+        {{ /* disable content output, this is really a layout hack */ }}
+        <Content v-if="false" />
     </div>
 </template>
 
@@ -64,8 +66,8 @@ export default {
     data() {
         return {
             items: [
-                { label: "A", itemState: "initial", loadState: "initial", errorMessage: "", isOptimized: true, paths: [], svgContents: '' },
-                { label: "B", itemState: "initial", loadState: "initial", errorMessage: "", isOptimized: true, paths: [], svgContents: '' }
+                { label: "A", itemState: "initial", loadState: "initial", errorMessage: "", isOptimized: true, paths: [], svgContents: "" },
+                { label: "B", itemState: "initial", loadState: "initial", errorMessage: "", isOptimized: true, paths: [], svgContents: "" }
             ]
         };
     },
@@ -147,18 +149,31 @@ export default {
                     el: el,
                     index: i,
                     path: parsePath(el.getAttribute("d"))
-                })); 
+                }));
 
                 this.endProcessing(item);
             } catch (e) {
                 this.handleError(item, e);
             }
         }
-    }
+    },
+    // created() {
+    //     if (typeof window !== 'undefined') {
+    //          if ("serviceWorker" in navigator) {
+    //             navigator.serviceWorker
+    //                 .register("./svgo-worker.js", {
+    //                     scope: "./"
+    //                 })
+    //                 .then(registration => {
+    //                     registration.addEventListener("updatefound", () => this._onUpdateFound(registration));
+    //                 });
+    //         }
+    //     }
+    // }
 };
 </script>
 
-<style lang="css">
+<style>
 .workbench-app {
     width: 100vw;
     height: calc(100vh - 58px);

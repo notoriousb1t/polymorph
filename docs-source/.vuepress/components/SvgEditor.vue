@@ -9,11 +9,11 @@
             @dragenter="handleDragEnter"
             @dragleave="handleDragLeave">
 
-            <template v-if="itemState === 'edit'">
+            <div v-if="itemState === 'edit'">
                 <div class="svg-viewer" v-html="svgContents"></div>
-            </template>
+            </div>
 
-            <template v-if="itemState !== 'edit'">
+            <div v-if="itemState !== 'edit'">
                 <input class="hidden-input" type="file" @change="handleFileSelected" accept="image/svg+xml" /> 
                 <div v-if="loadState === 'initial'">
                     Select a file or Drag an SVG here                
@@ -30,7 +30,7 @@
                 <div v-else-if="dragState === 'drag-on'">
                     Drop to optimize
                 </div>
-            </template>
+            </div>
             
         </label>
         <div class="overlay">
@@ -87,7 +87,7 @@ export default {
 };
 </script>
 
-<style lang="css">
+<style>
 .drop-zone {
     width: 100%;
     height: 100%;
