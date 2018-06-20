@@ -13,7 +13,7 @@
     "idb-keyval": "^3.0.4",
     "mocha": "^5.2.0",
     "pako": "^1.0.6",
-    "rollup": "^0.60.0",
+    "rollup": "^0.61.0",
     "rollup-plugin-node-resolve": "^3.0.0",
     "rollup-plugin-typescript": "^0.8.1",
     "svgo": "^1.0.5",
