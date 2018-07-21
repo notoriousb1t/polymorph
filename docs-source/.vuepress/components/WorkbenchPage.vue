@@ -2,17 +2,24 @@
     <div class="workbench-app">
         <svg-editor 
             v-for="item in items"
+            :key="item.label"
             :label="item.label" 
             :itemState="item.itemState"
             :loadState='item.loadState'
             :errorMessage="item.errorMessage"
             :isOptimized="item.isOptimized"
-            :paths="item.paths"
-            :svgContents="(item.optimizedFile && item.optimizedFile.text) || ''"
+            :paths="item.paths" 
             @open="openFile(item, $event)"
             @changeSettings="changeSettings(item, $event)" />
 
-        <div class="flex-centered">Preview</div> 
+        <div class="flex-centered">
+            <svg-previewer :pathData="pathData" :progress="progress" :duration="duration" />
+            
+            <div class="preview-scrubber">
+                <label>Tween</label>
+                <input type="range" v-model="progress" min="0" :max="duration" step="0" />
+            </div>
+        </div> 
         {{ /* disable content output, this is really a layout hack */ }}
         <Content v-if="false" />
     </div>
@@ -64,12 +71,19 @@ const settings = {
 
 export default {
     data() {
-        return {
+        return { 
+            duration: 1000,
+            progress: 500,
             items: [
-                { label: "A", itemState: "initial", loadState: "initial", errorMessage: "", isOptimized: true, paths: [], svgContents: "" },
-                { label: "B", itemState: "initial", loadState: "initial", errorMessage: "", isOptimized: true, paths: [], svgContents: "" }
+                { label: "A", itemState: "initial", loadState: "initial", errorMessage: "", isOptimized: true, paths: null },
+                { label: "B", itemState: "initial", loadState: "initial", errorMessage: "", isOptimized: true, paths: null }
             ]
         };
+    },
+    computed: {
+      pathData() {
+          return this.items.map(i => i.paths).filter(Boolean);
+      }  
     },
     methods: {
         openFile(item, fileObj) {
@@ -89,7 +103,7 @@ export default {
         beginProcessing(item) {
             item.errorMessage = "";
             item.loadState = "loading";
-            item.paths = [];
+            item.paths = null;
         },
         endProcessing(item) {
             item.itemState = item.originalFile ? "edit" : "initial";
@@ -143,13 +157,8 @@ export default {
                 div.innerHTML = item.optimizedFile.text;
 
                 // get all paths in document except for ones used in clippath
-                const pathEls = Array.from(div.querySelectorAll(":not(clipPath) > path"));
-
-                item.paths = pathEls.map((el, i) => ({
-                    el: el,
-                    index: i,
-                    path: parsePath(el.getAttribute("d"))
-                }));
+                const pathEl = div.querySelector(":not(clipPath) > path");
+                item.paths = parsePath(pathEl.getAttribute("d"));
 
                 this.endProcessing(item);
             } catch (e) {
@@ -157,19 +166,21 @@ export default {
             }
         }
     },
-    // created() {
-    //     if (typeof window !== 'undefined') {
-    //          if ("serviceWorker" in navigator) {
-    //             navigator.serviceWorker
-    //                 .register("./svgo-worker.js", {
-    //                     scope: "./"
-    //                 })
-    //                 .then(registration => {
-    //                     registration.addEventListener("updatefound", () => this._onUpdateFound(registration));
-    //                 });
-    //         }
-    //     }
-    // }
+    created() {
+        if (typeof window !== "undefined") {
+            if ("serviceWorker" in navigator) {
+                if (!navigator.serviceWorker.controller) {
+                    navigator.serviceWorker
+                        .register("./svgo-worker.js", {
+                            scope: "./"
+                        })
+                        .then(registration => {
+                            registration.addEventListener("updatefound", () => this._onUpdateFound(registration));
+                        });
+                }
+            }
+        }
+    }
 };
 </script>
 
@@ -186,5 +197,13 @@ export default {
 }
 .dropzone {
     border: dashed 2px lightgray;
+}
+.preview-scrubber {
+    position: absolute;
+    top: 0; 
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 36px;
 }
 </style>

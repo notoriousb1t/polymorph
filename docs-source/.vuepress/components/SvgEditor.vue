@@ -9,8 +9,10 @@
             @dragenter="handleDragEnter"
             @dragleave="handleDragLeave">
 
-            <div v-if="itemState === 'edit'">
-                <div class="svg-viewer" v-html="svgContents"></div>
+            <div v-if="itemState === 'edit'" class="svg-viewer">
+                <svg :viewBox="viewBox" xmlns="http://www.w3.org/2000/svg">
+                    <path :d="paths.path" />
+                </svg>
             </div>
 
             <div v-if="itemState !== 'edit'">
@@ -51,12 +53,33 @@ export default {
         loadState: String,
         errorMessage: String,
         isOptimized: Boolean,
-        paths: Array,
-        svgContents: String
-    },
+        paths: Object
+    }, 
     data() {
         return { 
             dragState: 'drag-off'
+        }
+    },
+    computed: {
+        viewBox() {
+            let x = 0;
+            let y = 0;
+            let w = 0;
+            let h = 0;
+
+            this.paths.data.forEach(path => {
+                x = Math.min(path.x, x);
+                y = Math.min(path.y, y);
+                w = Math.max(path.w, w);
+                h = Math.max(path.h, h);
+            });
+
+            return [
+                x,
+                y,
+                (x + w),
+                (y + h)
+            ].join(' ');
         }
     },
     methods: {
@@ -133,6 +156,7 @@ export default {
     display: flex;
     justify-content: center;
     align-items: center;
+    position: relative;
 }
 .flex-centered > * {
     margin: auto;
