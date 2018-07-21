@@ -17,11 +17,9 @@
             
             <div class="preview-scrubber">
                 <label>Tween</label>
-                <input type="range" v-model="progress" min="0" :max="duration" step="0" />
+                <input type="range" :value="progress" @input="progress = +$event.currentTarget.value" min="0" :max="duration" step="0" />
             </div>
-        </div> 
-        {{ /* disable content output, this is really a layout hack */ }}
-        <Content v-if="false" />
+        </div>
     </div>
 </template>
 
@@ -29,49 +27,49 @@
 import { parsePath } from "../../../lib.es2015/operators/parsePath";
 import { Svgo } from "../svgomg/svgo";
 
-const svgo = new Svgo();
-
-const settings = {
-    floatPrecision: 2,
-    plugins: {
-        cleanupAttrs: true,
-        removeXMLProcInst: true,
-        removeComments: true,
-        removeMetadata: true,
-        removeTitle: true,
-        removeDesc: true,
-        removeUselessDefs: true,
-        removeEditorsNSData: true,
-        removeEmptyAttrs: true,
-        removeHiddenElems: true,
-        removeEmptyText: true,
-        removeEmptyContainers: true,
-        removeViewBox: false,
-        cleanupEnableBackground: true,
-        convertStyleToAttrs: true,
-        convertColors: true,
-        convertPathData: true,
-        convertTransform: true,
-        removeUnknownsAndDefaults: true,
-        removeNonInheritableGroupAttrs: true,
-        removeUselessStrokeAndFill: false,
-        removeUnusedNS: true,
-        cleanupIDs: false,
-        cleanupNumericValues: true,
-        moveElemsAttrsToGroup: true,
-        moveGroupAttrsToElems: true,
-        collapseGroups: true,
-        removeRasterImages: false,
-        mergePaths: true,
-        convertShapeToPath: true,
-        sortAttrs: true,
-        removeDimensions: true
-    }
-};
-
 export default {
     data() {
-        return { 
+        const settings = {
+            floatPrecision: 2,
+            plugins: {
+                cleanupAttrs: true,
+                removeXMLProcInst: true,
+                removeComments: true,
+                removeMetadata: true,
+                removeTitle: true,
+                removeDesc: true,
+                removeUselessDefs: true,
+                removeEditorsNSData: true,
+                removeEmptyAttrs: true,
+                removeHiddenElems: true,
+                removeEmptyText: true,
+                removeEmptyContainers: true,
+                removeViewBox: false,
+                cleanupEnableBackground: true,
+                convertStyleToAttrs: true,
+                convertColors: true,
+                convertPathData: true,
+                convertTransform: true,
+                removeUnknownsAndDefaults: true,
+                removeNonInheritableGroupAttrs: true,
+                removeUselessStrokeAndFill: false,
+                removeUnusedNS: true,
+                cleanupIDs: false,
+                cleanupNumericValues: true,
+                moveElemsAttrsToGroup: true,
+                moveGroupAttrsToElems: true,
+                collapseGroups: true,
+                removeRasterImages: false,
+                mergePaths: true,
+                convertShapeToPath: true,
+                sortAttrs: true,
+                removeDimensions: true
+            }
+        };
+
+        return {
+            svgo: new Svgo(),
+            settings: settings,
             duration: 1000,
             progress: 500,
             items: [
@@ -81,9 +79,9 @@ export default {
         };
     },
     computed: {
-      pathData() {
-          return this.items.map(i => i.paths).filter(Boolean);
-      }  
+        pathData() {
+            return this.items.map(i => i.paths).filter(Boolean);
+        }
     },
     methods: {
         openFile(item, fileObj) {
@@ -126,7 +124,7 @@ export default {
             const thisJobId = (this._latestCompressJobId = Math.random());
 
             // cancel current request if applicable
-            await svgo.abortCurrent();
+            await this.svgo.abortCurrent();
 
             if (thisJobId != this._latestCompressJobId) {
                 // while we've been waiting, there's been a newer call
@@ -134,11 +132,11 @@ export default {
                 return;
             }
 
-            let file = await svgo.load(contents);
+            let file = await this.svgo.load(contents);
             item.originalFile = file;
 
             if (item.isOptimized) {
-                file = await svgo.process(settings, () => {
+                file = await this.svgo.process(this.settings, () => {
                     // notify UI somehow
                 });
             }
@@ -200,7 +198,7 @@ export default {
 }
 .preview-scrubber {
     position: absolute;
-    top: 0; 
+    top: 0;
     display: flex;
     justify-content: center;
     align-items: center;

@@ -1,4 +1,4 @@
 ---
 title: Polymorph Workbench 
-layout: WorkbenchPage
----
+layout: SimpleLayout
+--- 
