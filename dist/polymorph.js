@@ -18,15 +18,24 @@
         if (isString(ns)) {
             return ns;
         }
-        var result = '';
+        var result = [];
         for (var i = 0; i < ns.length; i++) {
             var n = ns[i];
-            result += M + EMPTY + formatter(n[0]) + EMPTY + formatter(n[1]) + EMPTY + C;
-            for (var f = 2; f < n.length; f++) {
-                result += EMPTY + formatter(n[f]);
+            result.push(M, formatter(n[0]), formatter(n[1]), C);
+            var lastResult = void 0;
+            for (var f = 2; f < n.length; f += 6) {
+                var p0 = formatter(n[f]);
+                var p1 = formatter(n[f + 1]);
+                var p2 = formatter(n[f + 2]);
+                var p3 = formatter(n[f + 3]);
+                var dx = formatter(n[f + 4]);
+                var dy = formatter(n[f + 5]);
+                if (lastResult != (lastResult = ('' + p0 + p1 + p2 + p3 + dx + dy))) {
+                    result.push(p0, p1, p2, p3, dx, dy);
+                }
             }
         }
-        return result;
+        return result.join(EMPTY);
     }
 
     var math = Math;
@@ -138,34 +147,23 @@
         }
     }
     function fillSubpath(ns, totalLength) {
+        var totalNeeded = totalLength - ns.length;
+        var fillAmount = Math.ceil(totalNeeded / (ns.length || 0));
         var result = createNumberArray(totalLength);
-        var slen = ns.length;
-        var totalNeeded = totalLength - slen;
-        var ratio = totalNeeded / slen;
-        var remaining = totalNeeded;
         result[0] = ns[0];
         result[1] = ns[1];
         var k = 1, j = 1;
         while (j < totalLength - 1) {
-            result[j + 1] = ns[k + 1];
-            result[j + 2] = ns[k + 2];
-            result[j + 3] = ns[k + 3];
-            result[j + 4] = ns[k + 4];
-            var dx = result[j + 5] = ns[k + 5];
-            var dy = result[j + 6] = ns[k + 6];
-            j += 6;
-            k += 6;
-            if (remaining) {
-                var total = round(ratio);
-                if (k === slen - 1) {
-                    total = totalLength - j;
-                }
-                for (var i = 0; i < total && remaining > 0; i++) {
-                    result[j + 1] = result[j + 3] = result[j + 5] = dx;
-                    result[j + 2] = result[j + 4] = result[j + 6] = dy;
-                    j += 6;
-                    remaining -= 6;
-                }
+            result[++j] = ns[++k];
+            result[++j] = ns[++k];
+            result[++j] = ns[++k];
+            result[++j] = ns[++k];
+            var dx = result[++j] = ns[++k];
+            var dy = result[++j] = ns[++k];
+            for (var f = 0; f < fillAmount; f++) {
+                result[j + 5] = result[j + 3] = result[j + 1] = dx;
+                result[j + 6] = result[j + 4] = result[j + 2] = dy;
+                j += 6;
             }
         }
         return result;
