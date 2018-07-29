@@ -30,7 +30,8 @@
                 var p3 = formatter(n[f + 3]);
                 var dx = formatter(n[f + 4]);
                 var dy = formatter(n[f + 5]);
-                if (lastResult != (lastResult = ('' + p0 + p1 + p2 + p3 + dx + dy))) {
+                var isPoint = p0 == dx && p2 == dx && p1 == dy && p3 == dy;
+                if (!isPoint || lastResult != (lastResult = ('' + p0 + p1 + p2 + p3 + dx + dy))) {
                     result.push(p0, p1, p2, p3, dx, dy);
                 }
             }

@@ -16,9 +16,9 @@ export function fillPoints(matrix: Matrix, addPoints: number): void {
   }
 }
 
-function fillSubpath(ns: FloatArray, totalLength: number): FloatArray  {
-  const totalNeeded = totalLength - ns.length; 
-  const fillAmount =  Math.ceil(totalNeeded / (ns.length || 0)); 
+export function fillSubpath(ns: FloatArray, totalLength: number): FloatArray  {
+  let totalNeeded = totalLength - ns.length; 
+  const ratio = Math.ceil(totalNeeded / ns.length);
   const result = createNumberArray(totalLength);
  
   result[0] = ns[0];
@@ -33,11 +33,14 @@ function fillSubpath(ns: FloatArray, totalLength: number): FloatArray  {
       const dx = result[++j] = ns[++k];
       const dy = result[++j] = ns[++k]; 
      
-      for (let f = 0; f < fillAmount; f++) { 
-        result[j + 5] = result[j + 3] = result[j + 1] = dx;
-        result[j + 6] = result[j + 4] = result[j + 2] = dy;
-        j += 6;
-      } 
+      if (totalNeeded) {
+        for (let f = 0; f < ratio && totalNeeded; f++) { 
+          result[j + 5] = result[j + 3] = result[j + 1] = dx;
+          result[j + 6] = result[j + 4] = result[j + 2] = dy;
+          j += 6;
+          totalNeeded -= 6;
+        } 
+      }
   }
   return result;
 } 
