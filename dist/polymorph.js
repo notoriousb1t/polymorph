@@ -149,7 +149,7 @@
     }
     function fillSubpath(ns, totalLength) {
         var totalNeeded = totalLength - ns.length;
-        var fillAmount = Math.ceil(totalNeeded / (ns.length || 0));
+        var ratio = Math.ceil(totalNeeded / ns.length);
         var result = createNumberArray(totalLength);
         result[0] = ns[0];
         result[1] = ns[1];
@@ -161,10 +161,13 @@
             result[++j] = ns[++k];
             var dx = result[++j] = ns[++k];
             var dy = result[++j] = ns[++k];
-            for (var f = 0; f < fillAmount; f++) {
-                result[j + 5] = result[j + 3] = result[j + 1] = dx;
-                result[j + 6] = result[j + 4] = result[j + 2] = dy;
-                j += 6;
+            if (totalNeeded) {
+                for (var f = 0; f < ratio && totalNeeded; f++) {
+                    result[j + 5] = result[j + 3] = result[j + 1] = dx;
+                    result[j + 6] = result[j + 4] = result[j + 2] = dy;
+                    j += 6;
+                    totalNeeded -= 6;
+                }
             }
         }
         return result;
