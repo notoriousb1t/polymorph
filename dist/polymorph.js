@@ -55,15 +55,10 @@
     var quadraticRatio = 2.0 / 3;
     var EPSILON = pow(2, -52);
 
-    function raiseError() {
-        throw new Error(Array.prototype.join.call(arguments, EMPTY));
-    }
-
     function fillObject(dest, src) {
+        dest = dest || {};
         for (var key in src) {
-            if (!dest.hasOwnProperty(key)) {
-                dest[key] = src[key];
-            }
+            key in dest || (dest[key] = src[key]);
         }
         return dest;
     }
@@ -137,12 +132,12 @@
         }
     }
 
-    function fillPoints(matrix, addPoints) {
+    function fillPoints(matrix) {
         var ilen = matrix[0].length;
         for (var i = 0; i < ilen; i++) {
             var left = matrix[0][i];
             var right = matrix[1][i];
-            var totalLength = max(left.length + addPoints, right.length + addPoints);
+            var totalLength = max(left.length, right.length);
             matrix[0][i] = fillSubpath(left, totalLength);
             matrix[1][i] = fillSubpath(right, totalLength);
         }
@@ -171,6 +166,10 @@
             }
         }
         return result;
+    }
+
+    function raiseError(message) {
+        throw Error(message);
     }
 
     function sizeDesc(a, b) {
@@ -203,7 +202,7 @@
             }
         }
         if (options.optimize === FILL) {
-            fillPoints(matrix, options.addPoints * 6);
+            fillPoints(matrix);
         }
         return matrix;
     }
@@ -212,55 +211,6 @@
     }
     function toPoints(p) {
         return p.d;
-    }
-
-    var defaultOptions = {
-        addPoints: 0,
-        optimize: FILL,
-        origin: { x: 0, y: 0 },
-        precision: 0
-    };
-    function interpolatePath(paths, options) {
-        options = fillObject(options, defaultOptions);
-        if (!paths || paths.length < 2) {
-            raiseError('invalid arguments');
-        }
-        var hlen = paths.length - 1;
-        var items = Array(hlen);
-        for (var h = 0; h < hlen; h++) {
-            items[h] = getPathInterpolator(paths[h], paths[h + 1], options);
-        }
-        var formatter = !options.precision ? round : function (n) { return n.toFixed(options.precision); };
-        return function (offset) {
-            var d = hlen * offset;
-            var flr = min(floor(d), hlen - 1);
-            return renderPath(items[flr]((d - flr) / (flr + 1)), formatter);
-        };
-    }
-    function getPathInterpolator(left, right, options) {
-        var matrix = normalizePaths(left, right, options);
-        var n = matrix[0].length;
-        return function (offset) {
-            if (abs(offset - 0) < EPSILON) {
-                return left.path;
-            }
-            if (abs(offset - 1) < EPSILON) {
-                return right.path;
-            }
-            var results = Array(n);
-            for (var h = 0; h < n; h++) {
-                results[h] = mixPoints(matrix[0][h], matrix[1][h], offset);
-            }
-            return results;
-        };
-    }
-    function mixPoints(a, b, o) {
-        var alen = a.length;
-        var results = createNumberArray(alen);
-        for (var i = 0; i < alen; i++) {
-            results[i] = a[i] + (b[i] - a[i]) * o;
-        }
-        return results;
     }
 
     function coalesce(current, fallback) {
@@ -473,7 +423,7 @@
                     }
                 }
                 else {
-                    raiseError(ctx.c, ' is not supported');
+                    raiseError(ctx.c + ' is not supported');
                 }
                 k += maxLength;
             } while (k < t2.length);
@@ -534,15 +484,72 @@
         return selector.getAttribute('d');
     }
 
-    function parse(d) {
-        return parsePath(getPath(d));
+    var defaultOptions = {
+        optimize: FILL,
+        origin: { x: 0, y: 0 },
+        precision: 0
+    };
+    function mix(options) {
+        options = fillObject(options, defaultOptions);
+        var left = parsePath(getPath(options.fromPath));
+        var right = parsePath(getPath(options.toPath));
+        var formatter = !options.precision ? round : function (n) { return n.toFixed(options.precision); };
+        var matrix = normalizePaths(left, right, options);
+        var n = matrix[0].length;
+        return function (offset) {
+            if (abs(offset - 0) < EPSILON) {
+                return left.path;
+            }
+            if (abs(offset - 1) < EPSILON) {
+                return right.path;
+            }
+            var results = Array(n);
+            for (var h = 0; h < n; h++) {
+                results[h] = mixPoints(matrix[0][h], matrix[1][h], offset);
+            }
+            return renderPath(results, formatter);
+        };
+    }
+    function mixPoints(a, b, o) {
+        var alen = a.length;
+        var results = createNumberArray(alen);
+        for (var i = 0; i < alen; i++) {
+            results[i] = a[i] + (b[i] - a[i]) * o;
+        }
+        return results;
     }
 
-    function interpolate(paths, options) {
-        return interpolatePath(paths.map(parse), options || {});
+    function nm8(fn, duration) {
+        var rate;
+        var currentTime;
+        var elapsed;
+        var tick = function (timeStamp) {
+            var delta = +!rate || -(currentTime || timeStamp) + (currentTime = timeStamp);
+            fn(min(max((elapsed += delta) / duration, 0), 1));
+            return !rate || elapsed >= duration || requestAnimationFrame(tick);
+        };
+        var nm810 = {
+            play: function () { return ((rate = 1),
+                elapsed <= duration || (elapsed = 0),
+                tick(performance.now()),
+                nm810); },
+            pause: function () { return ((rate = 0), nm810); },
+            stop: function () { return ((elapsed = currentTime = rate = 0), nm810); }
+        };
+        return nm810;
     }
 
-    exports.interpolate = interpolate;
+    function animate(options) {
+        var target = options.target;
+        if (typeof options.target === 'string') {
+            target = document.querySelector(target);
+        }
+        var mixer = mix(options);
+        return nm8(function (offset) { target.setAttribute('d', mixer(offset)); }, options.duration);
+    }
+
+    exports.mix = mix;
+    exports.animate = animate;
 
     Object.defineProperty(exports, '__esModule', { value: true });
 

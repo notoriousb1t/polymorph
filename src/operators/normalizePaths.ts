@@ -1,4 +1,4 @@
-import { IPathSegment, IPath, InterpolateOptions, FloatArray, Matrix } from '../types'
+import { IPathSegment, IPath, IMixOptions, FloatArray, Matrix } from '../types'
 import { fillSegments } from './fillSegments'
 import { normalizePoints } from './normalizePoints'
 import { fillPoints } from './fillPoints'
@@ -9,7 +9,7 @@ function sizeDesc(a: IPathSegment, b: IPathSegment): number {
     return b.p - a.p
 }
 
-export function normalizePaths(left: IPath, right: IPath, options: InterpolateOptions): FloatArray[][] {
+export function normalizePaths(left: IPath, right: IPath, options: IMixOptions): FloatArray[][] {
     // sort segments by perimeter size (more or less area)
     const leftPath = getSortedSegments(left)
     const rightPath = getSortedSegments(right)
@@ -43,7 +43,7 @@ export function normalizePaths(left: IPath, right: IPath, options: InterpolateOp
     }
 
     if (options.optimize === FILL) {
-        fillPoints(matrix, options.addPoints * 6)
+        fillPoints(matrix)
     }
     return matrix
 }

@@ -2,14 +2,14 @@ import { max } from '../utilities/math';
 import { FloatArray, Matrix } from '../types';
 import { createNumberArray } from '../utilities/createNumberArray';
 
-export function fillPoints(matrix: Matrix, addPoints: number): void {
+export function fillPoints(matrix: Matrix): void {
   const ilen = matrix[0].length
   for (let i = 0; i < ilen; i++) {
     const left = matrix[0][i]
     const right = matrix[1][i]
 
     // find the target length
-    const totalLength = max(left.length + addPoints, right.length + addPoints);
+    const totalLength = max(left.length, right.length);
 
     matrix[0][i] = fillSubpath(left, totalLength);
     matrix[1][i] = fillSubpath(right, totalLength);

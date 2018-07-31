@@ -86,7 +86,15 @@ export interface IParseContext {
     p?: number[]
 }
 
-export interface InterpolateOptions {
+export interface IAnimateOptions extends IMixOptions {
+    target: Element | string;
+    duration: number;
+}
+
+export interface IMixOptions {
+    fromPath: string | IPathElement;
+    toPath: string | IPathElement;
+    
     /**
      * Origin of the shape
      */
@@ -97,12 +105,7 @@ export interface InterpolateOptions {
      * - none: use when both shapes have an equal number of subpaths and points
      * - fill: (default) creates subpaths and adds points to align both paths
      */
-    optimize?: 'none' | 'fill'
-
-    /**
-     * Number of points to add when using optimize: fill.  The default is 0.
-     */
-    addPoints?: number
+    optimize?: 'none' | 'fill' 
 
     /**
      * Number of decimal places to use when rendering 'd' strings.

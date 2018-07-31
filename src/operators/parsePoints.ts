@@ -209,7 +209,7 @@ export function parsePoints(d: string): FloatArray[] {
           addCurve(ctx, beziers[j], beziers[j + 1], beziers[j + 2], beziers[j + 3], beziers[j + 4], beziers[j + 5]);
         }
       } else {
-        raiseError(ctx.c, ' is not supported');
+        raiseError(ctx.c + ' is not supported');
       }
 
       k += maxLength;

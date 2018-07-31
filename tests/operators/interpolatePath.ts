@@ -1,5 +1,5 @@
 import * as assert from 'assert';
-import { mixPoints } from '../../src/operators/interpolatePath'
+import { mixPoints } from '../../src/mix'
 
 
 test('finds the midpoint when .25 is provided', () => {

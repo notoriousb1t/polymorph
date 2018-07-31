@@ -1,2 +1,3 @@
 export * from './types'
-export { interpolate } from './interpolate'
+export { mix } from './mix'
+export { animate } from './animate'
