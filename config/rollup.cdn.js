@@ -5,10 +5,10 @@ import alias from 'rollup-plugin-alias';
 
 module.exports = {
   input: 'src/index.ts',
-  name: 'polymorph',
   output: {
     file: 'dist/polymorph.js',
-    format: 'umd'
+    format: 'umd',
+    name: 'polymorph'
   },
   plugins: [ 
     typescript({
