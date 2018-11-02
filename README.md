@@ -23,18 +23,20 @@
         </tr>
         <tr>
             <td>
-            <img style="max-height: 320px" src="./assets/flubber-evolve.gif" />
+                <img style="max-height: 320px"
+                     src="https://raw.githubusercontent.com/notoriousb1t/polymorph/HEAD/assets/flubber-evolve.gif" />
             </td>
             <td>
-                <img style="max-height: 320px"  src="./assets/polymorph-evolve.gif" />
+                <img style="max-height: 320px"
+                     src="https://raw.githubusercontent.com/notoriousb1t/polymorph/HEAD/assets/polymorph-evolve.gif" />
             </td>
         </tr>
     </tbody>
 </table>
 
-## Get Started 
+## Get Started
 
-Read the full [documentation](https://notoriousb1t.github.io/polymorph-docs) to get started or check out the demos below. 
+Read the full [documentation](https://notoriousb1t.github.io/polymorph-docs) to get started or check out the demos below.
 
 ## Demos
 - [Morph Leonardo da Vinci to a Skull](https://codepen.io/notoriousb1t/pen/KyPoYm)
