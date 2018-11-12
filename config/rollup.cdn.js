@@ -1,20 +1,19 @@
 
 import typescript from 'rollup-plugin-typescript';
 import nodeResolve from 'rollup-plugin-node-resolve';
-import alias from 'rollup-plugin-alias';
 
 module.exports = {
   input: 'src/index.ts',
   output: {
     file: 'dist/polymorph.js',
-    format: 'umd',
+    format: 'iife',
     name: 'polymorph'
   },
-  plugins: [ 
+  plugins: [
     typescript({
       tsconfig: false,
       target: 'es5',
-      rootDir: 'src', 
+      rootDir: 'src',
       preserveConstEnums: false,
       removeComments: true,
       declaration: false,

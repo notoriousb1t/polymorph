@@ -1,6 +1,6 @@
 import { IMixOptions, FloatArray } from './types'
 import { renderPath } from './operators/renderPath'
-import { EPSILON, abs, round } from './utilities/math' 
+import { EPSILON, abs, round } from './utilities/math'
 import { normalizePaths } from './operators/normalizePaths'
 import { fillObject } from './utilities/objects'
 import { createNumberArray } from './utilities/createNumberArray'

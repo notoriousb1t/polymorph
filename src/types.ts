@@ -89,12 +89,13 @@ export interface IParseContext {
 export interface IAnimateOptions extends IMixOptions {
     target: Element | string;
     duration: number;
+    easing?: (o: number) => number;
 }
 
 export interface IMixOptions {
     fromPath: string | IPathElement;
     toPath: string | IPathElement;
-    
+
     /**
      * Origin of the shape
      */
@@ -105,7 +106,7 @@ export interface IMixOptions {
      * - none: use when both shapes have an equal number of subpaths and points
      * - fill: (default) creates subpaths and adds points to align both paths
      */
-    optimize?: 'none' | 'fill' 
+    optimize?: 'none' | 'fill'
 
     /**
      * Number of decimal places to use when rendering 'd' strings.
