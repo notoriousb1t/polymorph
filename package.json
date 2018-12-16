@@ -28,7 +28,7 @@
     "@types/node": "^10.12.1",
     "del-cli": "^1.1.0",
     "jest": "^23.6.0",
-    "rollup": "^0.67.0",
+    "rollup": "^0.68.0",
     "rollup-plugin-node-resolve": "^3.4.0",
     "rollup-plugin-typescript": "^1.0.0",
     "ts-jest": "^23.10.4",
