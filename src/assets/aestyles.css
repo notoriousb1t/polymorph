@@ -1,0 +1,14 @@
+div.aeicons-scroll, body {
+  background-color: lightyellow;
+  width: 100vw;
+  height: 800px;
+  overflow: scroll;
+}
+
+div.container {
+  display: grid;
+  grid-template-columns: 40px 75px 40px;
+  grid-template-rows: 40px;
+  align-items: center;
+  justify-items: center;
+}

@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html dir="ltr" lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <title>adaept Ionic Icons Component</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=5.0">
+  <meta name="theme-color" content="#005000">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+
+  <script type="module" src="/build/aeiconscomponent.esm.js"></script>
+  <script nomodule src="/build/aeiconscomponent.js"></script>
+
+  <link rel="apple-touch-icon" href="/assets/icon/icon.png">
+  <link rel="icon" type="image/x-icon" href="/assets/icon/favicon.ico?v=2">
+  <link rel="manifest" href="/manifest.json">
+
+  <!-- ae Styles -->
+  <link rel="stylesheet" href="assets/aestyles.css">
+
+</head>
+
+<body bgcolor="ivory">
+
+  <div>
+    <ion-row>
+      <br />
+      <a href="https://adaept.com/">
+        <img src="assets/logo.gif" width="150" />
+      </a>
+      <div>4.6.1/1.1.3/0.0.1</div>
+    </ion-row>
+    <!-- container is css grid and is using ion-icon with ionic theme -->
+    <div class="container" style="  padding: 8px 0; display: inline-block;">
+      <ion-row>
+        <ae-morph-component aetype="round" aesize="ae32" name="remove-circle" color="danger"
+          arialabel="ae-remove-circle">
+        </ae-morph-component>
+        <span style="font-size:24px"><b>SIZE</b></span>
+        <ae-morph-component aetype="round" aesize="ae32" name="add-circle" color="success" arialabel="ae-add-circle">
+        </ae-morph-component>
+        <span style="font-size:24px"><b>RESET</b></span>
+        <ae-morph-component aetype="round" aesize="ae32" name="refresh-circle" color="tertiary"
+          arialabel="ae-refresh-circle">
+        </ae-morph-component>
+      </ion-row>
+    </div>
+    <p id="containerPara"><br></p>
+    <hr>
+  </div>
+
+  <div class="aeicons-scroll">
+    <div style="background-color:lightyellow">
+      <h1>Ionicons - theme and named colors</h1>
+      <h2>ae-morph-component</h2>
+      <h3>
+        <a href="http://acronymsandslang.com/definition/184249/RGBY-meaning.html">RGBY</a>
+      </h3>
+      <ae-morph-component aesize="ae16" name="football" color="red"></ae-morph-component>
+      <ae-morph-component aesize="ae32" name="basketball" color="green"></ae-morph-component>
+      <ae-morph-component aesize="ae48" name="baseball" color="blue"></ae-morph-component>
+      <ae-morph-component aesize="ae64" name="add-circle" color="yellow"></ae-morph-component>
+    </div>
+    <div style="background-color:gainsboro">
+      <h3>
+        <a href="https://beta.ionicframework.com/docs/theming/color-generator">PSTSWDDML</a>
+      </h3>
+      <ae-morph-component name="tennisball" aesize="ae32" color="primary"></ae-morph-component>
+      <ae-morph-component name="car" aesize="ae32" color="secondary"></ae-morph-component>
+      <ae-morph-component name="train" aesize="ae32" color="tertiary"></ae-morph-component>
+      <ae-morph-component name="airplane" aesize="ae32" color="success"></ae-morph-component>
+      <ae-morph-component name="boat" aesize="ae32" color="warning"></ae-morph-component>
+      <ae-morph-component name="bus" aesize="ae32" color="danger"></ae-morph-component>
+      <ae-morph-component name="subway" aesize="ae32" color="dark"></ae-morph-component>
+      <ae-morph-component name="aperture" aesize="ae32" color="medium"></ae-morph-component>
+      <ae-morph-component name="cog" aesize="ae32" color="light"></ae-morph-component>
+    </div>
+
+    <!--
+      <ae-morph-component aesize="ae384" name="crop" color="green"></ae-morph-component>
+      <ae-morph-component aesize="ae384" name="cloud-upload" color="darkolivegreen"></ae-morph-component>
+      <ae-morph-component aesize="ae448" name="cloud-upload" color="darkolivegreen"></ae-morph-component>
+      <ae-morph-component aesize="ae512" name="logo-ionic"></ae-morph-component>
+      <br />
+      <ae-morph-component aesize="ae1024" name="logo-ionitron"></ae-morph-component>
+      -->
+  </div>
+
+  <div class="footer">
+    <br />
+    <p>&copy;
+      <a href="https://adaept.com" target="_blank">adaept</a>
+    </p>
+  </div>
+  </div>
+
+</body>
+
+</html>
