@@ -25,7 +25,7 @@
   "description": "Morph SVG shapes",
   "devDependencies": {
     "@types/jest": "^24.0.0",
-    "@types/node": "^11.9.0",
+    "@types/node": "^12.6.3",
     "del-cli": "^1.1.0",
     "jest": "^23.6.0",
     "rollup": "^0.68.0",
