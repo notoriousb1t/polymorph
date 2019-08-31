@@ -26,7 +26,6 @@
     "exclude": [
         "dist",
         "lib",
-        "lib.es2015",
         "node_modules",
         "types"
     ]

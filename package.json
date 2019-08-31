@@ -37,11 +37,9 @@
     "typescript": "^3.1.4",
     "uglify-js": "^3.6.0"
   },
-  "jsnext:main": "./lib.es2015/index.js",
   "homepage": "https://notoriousb1t.github.io/polymorph-docs",
   "license": "MIT",
   "main": "./lib/index.js",
-  "module": "./lib.es2015/index.js",
   "name": "polymorph-js",
   "repository": {
     "type": "git",
@@ -53,12 +51,11 @@
     "node_modules/@types"
   ],
   "scripts": {
-    "build": "npm run build:cdn && npm run compress:cdn && npm run build:node && npm run build:es2015",
+    "build": "npm run build:cdn && npm run compress:cdn && npm run build:node",
     "build:cdn": "rollup -c ./config/rollup.cdn.js",
     "build:node": "tsc -p tsconfig.node.json",
-    "build:es2015": "tsc -p tsconfig.es2015.json",
     "compress:cdn": "uglifyjs --config-file ./config/compress.json -o dist/polymorph.min.js dist/polymorph.js",
-    "clean": "node_modules/.bin/del-cli -f dist lib lib.es2015 types",
+    "clean": "node_modules/.bin/del-cli -f dist lib types",
     "postversion": "git push --follow-tags && npm publish",
     "preversion": "npm run rebuild",
     "rebuild": "npm run clean && npm run build",
