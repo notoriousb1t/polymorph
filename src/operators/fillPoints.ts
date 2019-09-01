@@ -43,4 +43,4 @@ export function fillSubpath(ns: FloatArray, totalLength: number): FloatArray  {
       }
   }
   return result;
-} 
+}

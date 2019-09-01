@@ -1,11 +1,11 @@
 import { IPath, IRenderer, InterpolateOptions, FloatArray } from '../types'
 import { renderPath } from './renderPath'
-import { EPSILON, abs, floor, min, round } from '../utilities/math'
+import { EPSILON, abs, floor, min } from '../utilities/math'
 import { raiseError } from '../utilities/errors'
 import { normalizePaths } from './normalizePaths'
 import { fillObject } from '../utilities/objects'
 import { createNumberArray } from '../utilities/createNumberArray'
-import { FILL } from '../constants'
+import { FILL, _ } from '../constants'
 
 const defaultOptions: InterpolateOptions = {
     addPoints: 0,
@@ -34,7 +34,7 @@ export function interpolatePath(paths: IPath[], options: InterpolateOptions): (o
     }
 
     // create formatter for the precision
-    const formatter = !options.precision ? round : (n: number) => n.toFixed(options.precision)
+    const formatter = !options.precision ? _ : (n: number) => n.toFixed(options.precision)
 
     return (offset: number): string => {
         const d = hlen * offset

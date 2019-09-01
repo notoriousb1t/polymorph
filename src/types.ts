@@ -79,13 +79,14 @@ export interface IParseContext {
     /**
      * All segments
      */
-    s: FloatArray[]
+    segments: FloatArray[]
     /**
      * Current poly-bezier. (The one being bult)
      */
-    p?: number[]
+    current?: number[]
 }
 
+// tslint:disable-next-line:interface-name
 export interface InterpolateOptions {
     /**
      * Origin of the shape
