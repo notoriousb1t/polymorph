@@ -28,8 +28,7 @@
         ]
     },
     "exclude": [
-        "dist", "lib", 
-        "lib.es2015",
+        "dist", "lib",
         "tests", 
         "node_modules", "types"]
 }
