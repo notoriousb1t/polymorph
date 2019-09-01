@@ -7,7 +7,6 @@
   var _ = undefined;
   var SPACE = ' ';
   var FILL = 'fill';
-  var NONE = 'none';
   var DRAW_LINE_VERTICAL = 'V';
   var DRAW_LINE_HORIZONTAL = 'H';
   var DRAW_LINE = 'L';
@@ -87,6 +86,34 @@
       return new arrayConstructor(n);
   }
 
+  function computeDimensions(points) {
+      var xmin = points[0];
+      var ymin = points[1];
+      var ymax = ymin;
+      var xmax = xmin;
+      for (var i = 2; i < points.length; i += 6) {
+          var x = points[i + 4];
+          var y = points[i + 5];
+          xmin = min(xmin, x);
+          xmax = max(xmax, x);
+          ymin = min(ymin, y);
+          ymax = max(ymax, y);
+      }
+      return {
+          x: xmin,
+          w: (xmax - xmin),
+          y: ymin,
+          h: (ymax - ymin)
+      };
+  }
+  function computeAbsoluteOrigin(relativeX, relativeY, points) {
+      var dimensions = computeDimensions(points);
+      return {
+          x: dimensions.x + dimensions.w * relativeX,
+          y: dimensions.y + dimensions.h * relativeY
+      };
+  }
+
   function fillSegments(larger, smaller, origin) {
       var largeLen = larger.length;
       var smallLen = smaller.length;
@@ -96,10 +123,17 @@
       smaller.length = largeLen;
       for (var i = smallLen; i < largeLen; i++) {
           var l = larger[i];
-          var d = createNumberArray(l.d.length);
-          for (var k = 0; k < l.d.length; k += 2) {
-              d[k] = origin.absolute ? origin.x : l.x + (l.w * origin.x);
-              d[k + 1] = origin.absolute ? origin.y : l.y + (l.y * origin.y);
+          var originX = origin.x;
+          var originY = origin.y;
+          if (!origin.absolute) {
+              var absoluteOrigin = computeAbsoluteOrigin(originX, originY, l);
+              originX = absoluteOrigin.x;
+              originY = absoluteOrigin.y;
+          }
+          var d = createNumberArray(l.length);
+          for (var k = 0; k < l.length; k += 2) {
+              d[k] = originX;
+              d[k + 1] = originY;
           }
           smaller[i] = fillObject({ d: d }, l);
       }
@@ -125,16 +159,21 @@
       return sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2));
   }
 
-  function normalizePoints(x, y, ns) {
+  function normalizePoints(absolute, originX, originY, ns) {
       var len = ns.length;
       if (ns[len - 2] !== ns[0] || ns[len - 1] !== ns[1]) {
           return;
+      }
+      if (!absolute) {
+          var relativeOrigin = computeAbsoluteOrigin(originX, originY, ns);
+          originX = relativeOrigin.x;
+          originY = relativeOrigin.y;
       }
       var buffer = ns.slice(2);
       len = buffer.length;
       var index, minAmount;
       for (var i = 0; i < len; i += 6) {
-          var next = distance(x, y, buffer[i], buffer[i + 1]);
+          var next = distance(originX, originX, buffer[i], buffer[i + 1]);
           if (minAmount === _ || next < minAmount) {
               minAmount = next;
               index = i;
@@ -184,45 +223,54 @@
       return result;
   }
 
-  function sizeDesc(a, b) {
-      return b.p - a.p;
+  function perimeterPoints(pts) {
+      var n = pts.length;
+      var x2 = pts[n - 2];
+      var y2 = pts[n - 1];
+      var p = 0;
+      for (var i = 0; i < n; i += 6) {
+          p += distance(pts[i], pts[i + 1], x2, y2);
+          x2 = pts[i];
+          y2 = pts[i + 1];
+      }
+      return floor(p);
   }
+
+  function getSortedSegments(pathSegments) {
+      return pathSegments
+          .map(function (points) { return ({
+          points: points,
+          perimeter: perimeterPoints(points)
+      }); })
+          .sort(function (a, b) { return b.perimeter - a.perimeter; })
+          .map(function (a) { return a.points; });
+  }
+
   function normalizePaths(left, right, options) {
-      var leftPath = getSortedSegments(left);
-      var rightPath = getSortedSegments(right);
-      var origin = options.origin;
-      var ox = origin.x;
-      var oy = origin.y;
-      var absolute = origin.absolute;
-      if (leftPath.length !== rightPath.length) {
+      if (options.optimize === FILL) {
+          left = getSortedSegments(left);
+          right = getSortedSegments(right);
+      }
+      if (left.length !== right.length) {
           if (options.optimize === FILL) {
-              fillSegments(leftPath, rightPath, options.origin);
+              fillSegments(left, right, options.origin);
           }
           else {
               raiseError('optimize:none requires equal lengths');
           }
       }
       var matrix = Array(2);
-      matrix[0] = leftPath.map(toPoints);
-      matrix[1] = rightPath.map(toPoints);
-      if (options.optimize !== NONE) {
-          for (var i = 0; i < leftPath.length; i++) {
-              var ls = leftPath[i];
-              var rs = rightPath[i];
-              normalizePoints(absolute ? ox : ls.x + ls.w * ox, absolute ? oy : ls.y + ls.h * oy, matrix[0][i]);
-              normalizePoints(absolute ? ox : rs.x + rs.w * ox, absolute ? oy : rs.y + rs.h * oy, matrix[1][i]);
-          }
-      }
+      matrix[0] = left;
+      matrix[1] = right;
       if (options.optimize === FILL) {
+          var _a = options.origin, x = _a.x, y = _a.y, absolute = _a.absolute;
+          for (var i = 0; i < left.length; i++) {
+              normalizePoints(absolute, x, y, matrix[0][i]);
+              normalizePoints(absolute, x, y, matrix[1][i]);
+          }
           fillPoints(matrix, options.addPoints * 6);
       }
       return matrix;
-  }
-  function getSortedSegments(path) {
-      return path.data.slice().sort(sizeDesc);
-  }
-  function toPoints(p) {
-      return p.d;
   }
 
   var defaultOptions = {
@@ -249,14 +297,14 @@
       };
   }
   function getPathInterpolator(left, right, options) {
-      var matrix = normalizePaths(left, right, options);
+      var matrix = normalizePaths(left.getData(), right.getData(), options);
       var n = matrix[0].length;
       return function (offset) {
           if (abs(offset - 0) < EPSILON) {
-              return left.path;
+              return left.getStringData();
           }
           if (abs(offset - 1) < EPSILON) {
-              return right.path;
+              return right.getStringData();
           }
           var results = Array(n);
           for (var h = 0; h < n; h++) {
@@ -492,65 +540,84 @@
       return ctx.segments;
   }
 
-  function perimeterPoints(pts) {
-      var n = pts.length;
-      var x2 = pts[n - 2];
-      var y2 = pts[n - 1];
-      var p = 0;
-      for (var i = 0; i < n; i += 6) {
-          p += distance(pts[i], pts[i + 1], x2, y2);
-          x2 = pts[i];
-          y2 = pts[i + 1];
-      }
-      return floor(p);
-  }
-
-  function createPathSegmentArray(points) {
-      var xmin = points[0];
-      var ymin = points[1];
-      var ymax = ymin;
-      var xmax = xmin;
-      for (var i = 2; i < points.length; i += 6) {
-          var x = points[i + 4];
-          var y = points[i + 5];
-          xmin = min(xmin, x);
-          xmax = max(xmax, x);
-          ymin = min(ymin, y);
-          ymax = max(ymax, y);
-      }
-      return {
-          d: points,
-          x: xmin,
-          y: ymin,
-          w: xmax - xmin,
-          h: ymax - ymin,
-          p: perimeterPoints(points)
-      };
-  }
-  function parsePath(d) {
-      return {
-          path: d,
-          data: parsePoints(d).map(createPathSegmentArray)
-      };
-  }
-
   var selectorRegex = /^([#|\.]|path)/i;
-  function getPath(selector) {
-      if (isString(selector)) {
-          if (!selectorRegex.test(selector)) {
-              return selector;
-          }
-          selector = document.querySelector(selector);
+  function convertToPathData(pathSource) {
+      if (Array.isArray(pathSource)) {
+          return { data: pathSource, stringData: _ };
       }
-      return selector.getAttribute('d');
+      var stringData;
+      if (typeof pathSource === 'string' && selectorRegex.test(pathSource)) {
+          pathSource = document.querySelector(pathSource);
+      }
+      else {
+          stringData = pathSource;
+      }
+      if (typeof pathSource === 'string') {
+          return { data: parsePoints(pathSource), stringData: stringData };
+      }
+      var pathElement = pathSource;
+      if (pathElement instanceof SVGPathElement) {
+          stringData = pathElement.getAttribute('d');
+          return { data: parsePoints(stringData), stringData: stringData };
+      }
+      return raiseError('Unsupported element ', pathElement.tagName);
   }
 
-  function parse(d) {
-      return parsePath(getPath(d));
-  }
+  var Path = (function () {
+      function Path(pathSelectorOrElement) {
+          var _a = convertToPathData(pathSelectorOrElement), data = _a.data, stringData = _a.stringData;
+          this.data = data;
+          this.stringData = stringData;
+      }
+      Path.prototype.getData = function () {
+          return this.data;
+      };
+      Path.prototype.getStringData = function () {
+          if (!this.stringData) {
+              this.stringData = this.render();
+          }
+          return this.stringData;
+      };
+      Path.prototype.createOptimizedPair = function (path, options) {
+          var matrix = normalizePaths(this.data, path.data, options);
+          var path1 = new Path(matrix[0]);
+          path1.stringData = this.stringData;
+          var path2 = new Path(matrix[1]);
+          path2.stringData = path.stringData;
+          return [
+              path1,
+              path2
+          ];
+      };
+      Path.prototype.render = function (formatter) {
+          if (formatter === void 0) { formatter = round; }
+          var pathData = this.data;
+          var result = [];
+          for (var i = 0; i < pathData.length; i++) {
+              var n = pathData[i];
+              result.push(MOVE_CURSOR, formatter(n[0]), formatter(n[1]), DRAW_CURVE_CUBIC_BEZIER);
+              var lastResult = void 0;
+              for (var f = 2; f < n.length; f += 6) {
+                  var p0 = formatter(n[f]);
+                  var p1 = formatter(n[f + 1]);
+                  var p2 = formatter(n[f + 2]);
+                  var p3 = formatter(n[f + 3]);
+                  var dx = formatter(n[f + 4]);
+                  var dy = formatter(n[f + 5]);
+                  var isPoint = p0 == dx && p2 == dx && p1 == dy && p3 == dy;
+                  if (!isPoint || lastResult !=
+                      (lastResult = ('' + p0 + p1 + p2 + p3 + dx + dy))) {
+                      result.push(p0, p1, p2, p3, dx, dy);
+                  }
+              }
+          }
+          return result.join(SPACE);
+      };
+      return Path;
+  }());
 
   function interpolate(paths, options) {
-      return interpolatePath(paths.map(parse), options || {});
+      return interpolatePath(paths.map(function (path) { return new Path(path); }), options || {});
   }
 
   exports.interpolate = interpolate;

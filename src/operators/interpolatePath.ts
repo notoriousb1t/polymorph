@@ -1,4 +1,4 @@
-import { IPath, IRenderer, InterpolateOptions, FloatArray } from '../types'
+import { IRenderer, InterpolateOptions, FloatArray } from '../types'
 import { renderPath } from './renderPath'
 import { EPSILON, abs, floor, min } from '../utilities/math'
 import { raiseError } from '../utilities/errors'
@@ -6,6 +6,7 @@ import { normalizePaths } from './normalizePaths'
 import { fillObject } from '../utilities/objects'
 import { createNumberArray } from '../utilities/createNumberArray'
 import { FILL, _ } from '../constants'
+import { Path } from '../path';
 
 const defaultOptions: InterpolateOptions = {
     addPoints: 0,
@@ -20,7 +21,7 @@ const defaultOptions: InterpolateOptions = {
  * @param leftPath path to interpolate
  * @param rightPath path to interpolate
  */
-export function interpolatePath(paths: IPath[], options: InterpolateOptions): (offset: number) => string {
+export function interpolatePath(paths: Path[], options: InterpolateOptions): (offset: number) => string {
     options = fillObject(options, defaultOptions)
 
     if (!paths || paths.length < 2) {
@@ -43,15 +44,15 @@ export function interpolatePath(paths: IPath[], options: InterpolateOptions): (o
     }
 }
 
-function getPathInterpolator(left: IPath, right: IPath, options: InterpolateOptions): IRenderer<FloatArray[] | string> {
-    const matrix = normalizePaths(left, right, options)
+function getPathInterpolator(left: Path, right: Path, options: InterpolateOptions): IRenderer<FloatArray[] | string> {
+    const matrix = normalizePaths(left.getData(), right.getData(), options)
     const n = matrix[0].length
     return (offset: number) => {
         if (abs(offset - 0) < EPSILON) {
-            return left.path
+            return left.getStringData()
         }
         if (abs(offset - 1) < EPSILON) {
-            return right.path
+            return right.getStringData()
         }
 
         const results: FloatArray[] = Array(n)
