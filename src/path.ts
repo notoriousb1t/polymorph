@@ -1,8 +1,7 @@
-import { FloatArray, InterpolateOptions } from './types';
+import { FloatArray } from './types';
 import { convertToPathData, IPathSource } from './getPath';
 import { round } from './utilities/math';
 import { DRAW_CURVE_CUBIC_BEZIER, MOVE_CURSOR, SPACE } from './constants';
-import { normalizePaths } from './operators/normalizePaths';
 
 export class Path {
     private data: FloatArray[];
@@ -19,26 +18,7 @@ export class Path {
     }
 
     public getStringData(): string {
-        if (!this.stringData) {
-            this.stringData = this.render();
-        }
-        return this.stringData;
-    }
-
-    /**
-     * Aligns one or more paths with this path. This will mutate all paths involved. It is
-     * not recommended to 
-     */
-    public createOptimizedPair(path: Path, options: InterpolateOptions): [Path, Path] {
-        const matrix = normalizePaths(this.data, path.data, options);
-        const path1 = new Path(matrix[0]);
-        path1.stringData = this.stringData;
-        const path2 = new Path(matrix[1]);
-        path2.stringData = path.stringData;
-        return [
-            path1,
-            path2
-        ];
+        return this.stringData || (this.stringData = this.render());
     }
 
     public render(formatter: (n: number) => (number | string) = round): string {

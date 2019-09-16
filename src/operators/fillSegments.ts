@@ -1,5 +1,4 @@
 import { IOrigin, FloatArray } from '../types';
-import { fillObject } from '../utilities/objects';
 import { createNumberArray } from '../utilities/createNumberArray';
 import { computeAbsoluteOrigin } from './computeAbsoluteOrigin';
 
@@ -30,6 +29,6 @@ export function fillSegments(larger: FloatArray[], smaller: FloatArray[], origin
             d[k + 1] = originY;
         }
 
-        smaller[i] = fillObject({ d }, l)
+        smaller[i] = d;
     }
 }

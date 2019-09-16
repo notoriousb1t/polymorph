@@ -69,15 +69,6 @@
       throw new Error(Array.prototype.join.call(arguments, SPACE));
   }
 
-  function fillObject(dest, src) {
-      for (var key in src) {
-          if (!dest.hasOwnProperty(key)) {
-              dest[key] = src[key];
-          }
-      }
-      return dest;
-  }
-
   var userAgent = typeof window !== 'undefined' && window.navigator.userAgent;
   var isEdge = /(MSIE |Trident\/|Edge\/)/i.test(userAgent);
 
@@ -135,7 +126,7 @@
               d[k] = originX;
               d[k + 1] = originY;
           }
-          smaller[i] = fillObject({ d: d }, l);
+          smaller[i] = d;
       }
   }
 
@@ -199,7 +190,7 @@
   }
   function fillSubpath(ns, totalLength) {
       var totalNeeded = totalLength - ns.length;
-      var ratio = Math.ceil(totalNeeded / ns.length);
+      var ratio = Math.ceil(totalLength / ns.length);
       var result = createNumberArray(totalLength);
       result[0] = ns[0];
       result[1] = ns[1];
@@ -271,6 +262,15 @@
           fillPoints(matrix, options.addPoints * 6);
       }
       return matrix;
+  }
+
+  function fillObject(dest, src) {
+      for (var key in src) {
+          if (!dest.hasOwnProperty(key)) {
+              dest[key] = src[key];
+          }
+      }
+      return dest;
   }
 
   var defaultOptions = {
@@ -573,21 +573,7 @@
           return this.data;
       };
       Path.prototype.getStringData = function () {
-          if (!this.stringData) {
-              this.stringData = this.render();
-          }
-          return this.stringData;
-      };
-      Path.prototype.createOptimizedPair = function (path, options) {
-          var matrix = normalizePaths(this.data, path.data, options);
-          var path1 = new Path(matrix[0]);
-          path1.stringData = this.stringData;
-          var path2 = new Path(matrix[1]);
-          path2.stringData = path.stringData;
-          return [
-              path1,
-              path2
-          ];
+          return this.stringData || (this.stringData = this.render());
       };
       Path.prototype.render = function (formatter) {
           if (formatter === void 0) { formatter = round; }
@@ -620,6 +606,7 @@
       return interpolatePath(paths.map(function (path) { return new Path(path); }), options || {});
   }
 
+  exports.Path = Path;
   exports.interpolate = interpolate;
 
   Object.defineProperty(exports, '__esModule', { value: true });
