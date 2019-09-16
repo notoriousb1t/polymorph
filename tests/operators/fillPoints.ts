@@ -58,9 +58,9 @@ test('it fills the path evenly if there are twice as many elements', () => {
     10, 10,
     0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0,
     1, 1, 1, 1, 1, 1,
     1, 1, 1, 1, 1, 1,
-    2, 2, 2, 2, 2, 2,
     2, 2, 2, 2, 2, 2
   ])
 

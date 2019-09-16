@@ -2,12 +2,19 @@ import { rotatePoints } from './rotatePoints'
 import { _ } from '../constants'
 import { distance } from '../utilities/distance'
 import { FloatArray } from '../types'
+import { computeAbsoluteOrigin } from './computeAbsoluteOrigin';
 
-export function normalizePoints(x: number, y: number, ns: FloatArray): void {
+export function normalizePoints(absolute: boolean, originX: number, originY: number, ns: FloatArray): void {
     let len = ns.length
     if (ns[len - 2] !== ns[0] || ns[len - 1] !== ns[1]) {
         // skip redraw if this is not a closed shape
         return
+    }
+
+    if (!absolute) {
+        const relativeOrigin = computeAbsoluteOrigin(originX, originY, ns);
+        originX = relativeOrigin.x;
+        originY = relativeOrigin.y;
     }
 
     // create buffer to hold rotating data
@@ -18,7 +25,7 @@ export function normalizePoints(x: number, y: number, ns: FloatArray): void {
     let index: number, minAmount: number
     for (let i = 0; i < len; i += 6) {
         // find the distance to the upper left corner
-        const next = distance(x, y, buffer[i], buffer[i + 1])
+        const next = distance(originX, originX, buffer[i], buffer[i + 1])
 
         if (minAmount === _ || next < minAmount) {
             // capture the amount and set the index
@@ -39,3 +46,5 @@ export function normalizePoints(x: number, y: number, ns: FloatArray): void {
         ns[i + 2] = buffer[i]
     }
 }
+
+

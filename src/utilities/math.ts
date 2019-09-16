@@ -12,12 +12,8 @@ export const sin = math.sin
 export const tan = math.tan
 export const PI = math.PI
 
-/**
- * Ratio from the control point in a quad to a cubic bezier control points
- */
-export const quadraticRatio = 2.0 / 3
+/** Ratio from the control point in a quad to a cubic bezier control points */
+export const QUADRATIC_RATIO = 2.0 / 3
 
-/**
- * Equivalent to Number.EPSILON
- */
+/** Equivalent to Number.EPSILON */
 export const EPSILON = pow(2, -52)

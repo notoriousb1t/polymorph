@@ -7,42 +7,10 @@ export interface IRenderer<T> {
 
 export interface IPath {
     path: string
-    data: IPathSegment[]
+    data: FloatArray[]
 }
 
-/**
- * Internal representation of Path data
- */
-export interface IPathSegment {
-    /**
-     * Path data
-     */
-    d: FloatArray
-    /**
-     * Approximate box width
-     */
-    w: number
-    /**
-     * Approximate box height
-     */
-    h: number
-    /**
-     * Approximate x for upper left corner
-     */
-    x: number
-    /**
-     * Approximate y for upper left corner
-     */
-    y: number
-    /**
-     * Approximate perimeter
-     */
-    p: number
-}
-
-export interface IPathElement {
-    tagName: 'PATH'
-}
+export type IMorphable = string | SVGPathElement;
 
 /**
  * Used to keep track of the current state of the path/point parser
@@ -79,13 +47,14 @@ export interface IParseContext {
     /**
      * All segments
      */
-    s: FloatArray[]
+    segments: FloatArray[]
     /**
      * Current poly-bezier. (The one being bult)
      */
-    p?: number[]
+    current?: number[]
 }
 
+// tslint:disable-next-line:interface-name
 export interface InterpolateOptions {
     /**
      * Origin of the shape

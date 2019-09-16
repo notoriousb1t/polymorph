@@ -1,8 +1,9 @@
-import { _, Z, T, Q, S, C, V, H, EMPTY, A, M, L } from '../constants';
+// tslint:disable-next-line:max-line-length
+import { _,  SPACE, DRAW_LINE_VERTICAL, DRAW_LINE_HORIZONTAL, DRAW_ARC, CLOSE_PATH, MOVE_CURSOR, DRAW_LINE, DRAW_CURVE_CUBIC_BEZIER, DRAW_CURVE_SMOOTH, DRAW_CURVE_QUADRATIC, DRAW_CURVE_QUADRATIC_CONTINUATION } from '../constants';
 import { coalesce } from '../utilities/coalesce';
 import { IParseContext, FloatArray } from '../types';
 import { raiseError } from '../utilities/errors';
-import { quadraticRatio } from '../utilities/math';
+import { QUADRATIC_RATIO } from '../utilities/math';
 import { arcToCurve } from './arcToCurve';
 
 // describes the number of arguments each command has
@@ -36,7 +37,7 @@ function addCurve(
   ctx.y = coalesce(dy, y);
 
   // add numbers to points
-  ctx.p.push(coalesce(x1, x), (y1 = coalesce(y1, y)), (x2 = coalesce(x2, x)), (y2 = coalesce(y2, y)), ctx.x, ctx.y);
+  ctx.current.push(coalesce(x1, x), (y1 = coalesce(y1, y)), (x2 = coalesce(x2, x)), (y2 = coalesce(y2, y)), ctx.x, ctx.y);
 
   // set last command type
   ctx.lc = ctx.c;
@@ -53,11 +54,11 @@ function convertToAbsolute(ctx: IParseContext): void {
   const x = ctx.x;
   const y = ctx.y;
 
-  if (c === V) {
+  if (c === DRAW_LINE_VERTICAL) {
     t[0] += y;
-  } else if (c === H) {
+  } else if (c === DRAW_LINE_HORIZONTAL) {
     t[0] += x;
-  } else if (c === A) {
+  } else if (c === DRAW_ARC) {
     t[5] += x;
     t[6] += y;
   } else {
@@ -84,7 +85,7 @@ function parseSegments(d: string): (string | number)[][] {
 
 function parseSegment(s2: string): (string | number)[] {
   // split command segment into command + args
-  return s2.split(EMPTY).map(parseCommand);
+  return s2.split(SPACE).map(parseCommand);
 }
 
 function parseCommand(str: string, i: number): string | number {
@@ -101,7 +102,7 @@ export function parsePoints(d: string): FloatArray[] {
   const ctx: IParseContext = {
     x: 0,
     y: 0,
-    s: []
+    segments: []
   };
 
   // split into segments
@@ -114,7 +115,7 @@ export function parsePoints(d: string): FloatArray[] {
 
     // setup context
     const command = commandLetter.toUpperCase();
-    const isRelative = command !== Z && command !== commandLetter;
+    const isRelative = command !== CLOSE_PATH && command !== commandLetter;
 
     // set command on context
     ctx.c = command;
@@ -140,24 +141,24 @@ export function parsePoints(d: string): FloatArray[] {
 
       let x1: number, y1: number, dx: number, dy: number, x2: number, y2: number;
 
-      if (command === M) {
-        ctx.s.push((ctx.p = [(ctx.x = n[0]), (ctx.y = n[1])]));
-      } else if (command === H) {
+      if (command === MOVE_CURSOR) {
+        ctx.segments.push((ctx.current = [(ctx.x = n[0]), (ctx.y = n[1])]));
+      } else if (command === DRAW_LINE_HORIZONTAL) {
         addCurve(ctx, _, _, _, _, n[0], _);
-      } else if (command === V) {
+      } else if (command === DRAW_LINE_VERTICAL) {
         addCurve(ctx, _, _, _, _, _, n[0]);
-      } else if (command === L) {
+      } else if (command === DRAW_LINE) {
         addCurve(ctx, _, _, _, _, n[0], n[1]);
-      } else if (command === Z) {
-        addCurve(ctx, _, _, _, _, ctx.p[0], ctx.p[1]);
-      } else if (command === C) {
+      } else if (command === CLOSE_PATH) {
+        addCurve(ctx, _, _, _, _, ctx.current[0], ctx.current[1]);
+      } else if (command === DRAW_CURVE_CUBIC_BEZIER) {
         addCurve(ctx, n[0], n[1], n[2], n[3], n[4], n[5]);
 
         // set last control point for sub-sequence C/S
         ctx.cx = n[2];
         ctx.cy = n[3];
-      } else if (command === S) {
-        const isInitialCurve = ctx.lc !== S && ctx.lc !== C;
+      } else if (command === DRAW_CURVE_SMOOTH) {
+        const isInitialCurve = ctx.lc !== DRAW_CURVE_SMOOTH && ctx.lc !== DRAW_CURVE_CUBIC_BEZIER;
         x1 = isInitialCurve ? _ : x * 2 - ctx.cx;
         y1 = isInitialCurve ? _ : y * 2 - ctx.cy;
 
@@ -166,7 +167,7 @@ export function parsePoints(d: string): FloatArray[] {
         // set last control point for sub-sequence C/S
         ctx.cx = n[0];
         ctx.cy = n[1];
-      } else if (command === Q) {
+      } else if (command === DRAW_CURVE_QUADRATIC) {
         const cx1 = n[0];
         const cy1 = n[1];
         dx = n[2];
@@ -174,25 +175,25 @@ export function parsePoints(d: string): FloatArray[] {
 
         addCurve(
           ctx,
-          x + (cx1 - x) * quadraticRatio,
-          y + (cy1 - y) * quadraticRatio,
-          dx + (cx1 - dx) * quadraticRatio,
-          dy + (cy1 - dy) * quadraticRatio,
+          x + (cx1 - x) * QUADRATIC_RATIO,
+          y + (cy1 - y) * QUADRATIC_RATIO,
+          dx + (cx1 - dx) * QUADRATIC_RATIO,
+          dy + (cy1 - dy) * QUADRATIC_RATIO,
           dx,
           dy
         );
 
         ctx.cx = cx1;
         ctx.cy = cy1;
-      } else if (command === T) {
+      } else if (command === DRAW_CURVE_QUADRATIC_CONTINUATION) {
         dx = n[0];
         dy = n[1];
 
-        if (ctx.lc === Q || ctx.lc === T) {
-          x1 = x + (x * 2 - ctx.cx - x) * quadraticRatio;
-          y1 = y + (y * 2 - ctx.cy - y) * quadraticRatio;
-          x2 = dx + (x * 2 - ctx.cx - dx) * quadraticRatio;
-          y2 = dy + (y * 2 - ctx.cy - dy) * quadraticRatio;
+        if (ctx.lc === DRAW_CURVE_QUADRATIC || ctx.lc === DRAW_CURVE_QUADRATIC_CONTINUATION) {
+          x1 = x + (x * 2 - ctx.cx - x) * QUADRATIC_RATIO;
+          y1 = y + (y * 2 - ctx.cy - y) * QUADRATIC_RATIO;
+          x2 = dx + (x * 2 - ctx.cx - dx) * QUADRATIC_RATIO;
+          y2 = dy + (y * 2 - ctx.cy - dy) * QUADRATIC_RATIO;
         } else {
           x1 = x2 = x;
           y1 = y2 = y;
@@ -202,7 +203,7 @@ export function parsePoints(d: string): FloatArray[] {
 
         ctx.cx = x2;
         ctx.cy = y2;
-      } else if (command === A) {
+      } else if (command === DRAW_ARC) {
         const beziers = arcToCurve(x, y, n[0], n[1], n[2], n[3], n[4], n[5], n[6]);
 
         for (let j = 0; j < beziers.length; j += 6) {
@@ -218,5 +219,5 @@ export function parsePoints(d: string): FloatArray[] {
 
   // return segments with the largest sub-paths first
   // this makes it more likely that holes will be filled
-  return ctx.s;
+  return ctx.segments;
 }
