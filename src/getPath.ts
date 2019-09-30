@@ -30,7 +30,7 @@ export function convertToPathData(pathSource: FloatArray[] | IPathSource): IPath
   }
 
   const pathElement = pathSource as SupportedElement;
-  if (pathElement instanceof SVGPathElement) {
+  if (pathElement.tagName === 'PATH') {
     // path's can be converted to path data by reading the d property.
     stringData = pathElement.getAttribute('d');
     return { data: parsePoints(stringData), stringData };

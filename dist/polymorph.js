@@ -556,7 +556,7 @@
           return { data: parsePoints(pathSource), stringData: stringData };
       }
       var pathElement = pathSource;
-      if (pathElement instanceof SVGPathElement) {
+      if (pathElement.tagName === 'PATH') {
           stringData = pathElement.getAttribute('d');
           return { data: parsePoints(stringData), stringData: stringData };
       }
