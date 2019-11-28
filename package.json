@@ -32,7 +32,7 @@
     "rollup-plugin-node-resolve": "^5.2.0",
     "rollup-plugin-typescript": "^1.0.0",
     "ts-jest": "^24.0.2",
-    "ts-node": "^8.3.0",
+    "ts-node": "^8.5.4",
     "tslint": "^5.18.0",
     "typescript": "^3.1.4",
     "uglify-js": "^3.6.0"
