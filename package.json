@@ -35,7 +35,7 @@
     "ts-node": "^8.3.0",
     "tslint": "^5.18.0",
     "typescript": "^3.1.4",
-    "uglify-js": "^3.6.0"
+    "uglify-js": "^3.8.1"
   },
   "homepage": "https://notoriousb1t.github.io/polymorph-docs",
   "license": "MIT",
