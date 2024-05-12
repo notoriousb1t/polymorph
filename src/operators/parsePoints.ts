@@ -114,7 +114,7 @@ export function parsePoints(d: string): FloatArray[] {
     const commandLetter = terms[0] as string;
 
     // setup context
-    const command = commandLetter.toUpperCase();
+    const command = commandLetter.toUpperCase() as keyof typeof argLengths;
     const isRelative = command !== CLOSE_PATH && command !== commandLetter;
 
     // set command on context

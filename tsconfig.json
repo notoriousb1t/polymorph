@@ -11,12 +11,10 @@
         "noFallthroughCasesInSwitch": true,
         "noImplicitAny": true,
         "noImplicitReturns": true,
-        "noImplicitUseStrict": true,
         "noUnusedLocals": true,        
         "preserveConstEnums": false,
         "removeComments": false,
         "sourceMap": false, 
-        "suppressImplicitAnyIndexErrors": true,
         "target": "es5",
         "lib": [
             "es2015",
